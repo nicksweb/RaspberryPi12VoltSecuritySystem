@@ -7,7 +7,7 @@ import pifacedigitalio as p
 import mysql.connector
 
 try:
-    cnx = mysql.connector.connect(user='pmauser',password='213hex4817',host='127.0.0.1',database='piSecuritySystem')
+    cnx = mysql.connector.connect(user='pmatest',password='dummypassword',host='127.0.0.1',database='piSecuritySystem')
 except mysql.connector.Error as err:
    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
        print("Something is wrong with your user name or password")
@@ -37,18 +37,21 @@ def Sleeper():
             print('Sensor 0 is active.', currentDateTime())
             output = 0
             pinNum= 0
+            writeInfo(pinNum, output)
 
         if p.digital_read(1) == 0:
             print('Sensor 1 is active.', currentDateTime())
             output = 0
             pinNum = 1
+            writeInfo(pinNum, output)
 
         if p.digital_read(4) == 1:
             print('Sensor 4 is active.', currentDateTime())
             output = 1
             pinNum = 4
+            writeInfo(pinNum, output)
 
-        writeInfo(pinNum, output)
+
 
 def currentDateTime():
     nowtime = d.now()
