@@ -3,8 +3,8 @@ from datetime import datetime as d
 import datetime
 import time
 import pifacedigitalio
-import pifacedigitalio as p
 import mysql.connector
+import os
 
 try:
     cnx = mysql.connector.connect(user='pmauser',password='213hex4817',host='127.0.0.1',database='piSecuritySystem')
@@ -66,18 +66,13 @@ def writeInfo(output, pinNum):
     mycursor = cnx.cursor()
 
     sql = "INSERT INTO piSS_SensorLog (Port, Status) VALUES (%s, %s)"
-    val = (, )
+    val = (pinNum, output)
     mycursor.execute(sql, val)
 
     cnx.commit()
 
     print(mycursor.rowcount, "record inserted.")
 
-try:
-    time.sleep(2)
-    p.init()
-    prepareFile()
-    Sleeper()
 except KeyboardInterrupt:
     print('Program exiting')
     cnx.close()
