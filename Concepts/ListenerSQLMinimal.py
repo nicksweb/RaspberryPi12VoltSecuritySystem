@@ -1,6 +1,7 @@
 import time
 import pifacedigitalio
 import mysql.connector
+from decimal import *
 
 #Database Details
 dbUser='pmatest'
@@ -32,15 +33,25 @@ def DatabasePullStatus(i):
         0: 1,
         1: 0
     }
-    return switcher.get(i,"Invalid result fetched")
+    return switcher.get(float(i),"Invalid result fetched")
 
-def beeper(w,x): # Number of times to beep
+def timerBeeper(timerDecimal):
+        switcher={
+            0: Decimal(1),
+            1: Decimal(0.2)
+        }
+        return switcher.get(timerDecimal,"Invalid result fetches")
+
+def beeper(w,x,timeChoice): # Number of times to beep
         # Do something
+        timeVal = float(timerBeeper(timeChoice))
+
+        print (timeVal)
 
         for i in range(x):
-            time.sleep(0.2)
+            time.sleep(timeVal)
             pifacedigital.output_pins[0].value = w
-            time.sleep(0.2)
+            time.sleep(timeVal)
             pifacedigital.output_pins[0].value = 0
 
 def pause():
@@ -123,7 +134,7 @@ def RemoteInput4(event): # D Key on Remote
 
     #pin = 4
 
-    sql_select_Query = "select * from piSS_Zones Where Zone = 9999"
+    sql_select_Query = "select * from piSS_Zones Where Zone = 9999;"
     mycursor.execute(sql_select_Query)
     ReturnedStatus = mycursor.fetchone()
 
@@ -139,65 +150,97 @@ def RemoteInput4(event): # D Key on Remote
     #print('Database is ', databaseValue, 'and ', status, "is.")
 
 
-    sql = "Update piSS_Zones Set Status = %d WHERE Zone BETWEEN 0 AND 9999" % (DatabasePullStatus(databaseValue))
+    sql = "Update piSS_Zones Set Status = %d WHERE Zone BETWEEN 0 AND 9999;" % (DatabasePullStatus(databaseValue))
     mycursor.execute(sql)
 
     cnx.commit()
     #pifacedigital.output_pins[pin].toggle()
-    beeper(DatabasePullStatus(databaseValue), 4)
+    beeper(DatabasePullStatus(databaseValue), 4, DatabasePullStatus(databaseValue))
     print("Finished insertion")
 
-def RemoteInput5(event):
+def RemoteInput5(event): # C Key on Remote
     mycursor = cnx.cursor()
 
-    pin = 5
+    #pin = 5
 
-    status = pifacedigital.input_pins[pin].value
-    pifacedigital.leds[pin].toggle()
-    print(pin, 'is ', status, "record inserted.")
+    sql_select_Query = "select * from piSS_Zones Where Zone = 2;"
+    mycursor.execute(sql_select_Query)
+    ReturnedStatus = mycursor.fetchone()
 
-    sql = "Update piSS_Zones Set Status = %d WHERE Zone = 2" % (status)
-    mycursor.execute(sql)
+    databaseValue = ReturnedStatus[3]
 
-    cnx.commit()
-    #pifacedigital.output_pins[pin].toggle()
+    print('Begenning, ', databaseValue)
 
-    print("Finished insertion")
-
-def RemoteInput6(event):
-    mycursor = cnx.cursor()
-
-    pin = 6
-
-    status = pifacedigital.input_pins[pin].value
+    print('Switch, ', DatabasePullStatus(databaseValue))
+    #status = pifacedigital.input_pins[pin].value
     #pifacedigital.output_pins[pin].value = status
-    pifacedigital.leds[pin].toggle()
-    print(pin, 'is ', status, "record inserted.")
+    #pifacedigital.leds[pin].toggle()
+    #print(pin, 'is ', status, "record inserted.")
+    #print('Database is ', databaseValue, 'and ', status, "is.")
 
-    sql = "Update piSS_Zones Set Status = %d WHERE Zone = 1" % (status)
+
+    sql = "Update piSS_Zones Set Status = %d WHERE Zone = 2" % (DatabasePullStatus(databaseValue))
     mycursor.execute(sql)
 
     cnx.commit()
     #pifacedigital.output_pins[pin].toggle()
+    beeper(DatabasePullStatus(databaseValue), 3, DatabasePullStatus(databaseValue))
+    print("Finished insertion")
 
+def RemoteInput6(event): # Button B on remote.
+    mycursor = cnx.cursor()
+
+
+    sql_select_Query = "select * from piSS_Zones Where Zone = 1;"
+    mycursor.execute(sql_select_Query)
+    ReturnedStatus = mycursor.fetchone()
+
+    databaseValue = ReturnedStatus[3]
+
+    print('Begenning, ', databaseValue)
+
+    print('Switch, ', DatabasePullStatus(databaseValue))
+    #status = pifacedigital.input_pins[pin].value
+    #pifacedigital.output_pins[pin].value = status
+    #pifacedigital.leds[pin].toggle()
+    #print(pin, 'is ', status, "record inserted.")
+    #print('Database is ', databaseValue, 'and ', status, "is.")
+
+
+    sql = "Update piSS_Zones Set Status = %d WHERE Zone = 1" % (DatabasePullStatus(databaseValue))
+    mycursor.execute(sql)
+
+    cnx.commit()
+    #pifacedigital.output_pins[pin].toggle()
+    beeper(DatabasePullStatus(databaseValue), 2, DatabasePullStatus(databaseValue))
     print("Finished insertion")
 
 def RemoteInput7(event):
     mycursor = cnx.cursor()
 
-    pin = 7
 
-    status = pifacedigital.input_pins[pin].value
+    sql_select_Query = "select * from piSS_Zones Where Zone = 0;"
+    mycursor.execute(sql_select_Query)
+    ReturnedStatus = mycursor.fetchone()
+
+    databaseValue = ReturnedStatus[3]
+
+    print('Begenning, ', databaseValue)
+
+    print('Switch, ', DatabasePullStatus(databaseValue))
+    #status = pifacedigital.input_pins[pin].value
     #pifacedigital.output_pins[pin].value = status
-    pifacedigital.leds[pin].toggle()
-    print(pin, 'is ', status, "record inserted.")
+    #pifacedigital.leds[pin].toggle()
+    #print(pin, 'is ', status, "record inserted.")
+    #print('Database is ', databaseValue, 'and ', status, "is.")
 
-    sql = "Update piSS_Zones Set Status = %d WHERE Zone = 0" % (status)
+
+    sql = "Update piSS_Zones Set Status = %d WHERE Zone = 0" % (DatabasePullStatus(databaseValue))
     mycursor.execute(sql)
 
     cnx.commit()
     #pifacedigital.output_pins[pin].toggle()
-
+    beeper(DatabasePullStatus(databaseValue), 1, DatabasePullStatus(databaseValue))
     print("Finished insertion")
 
 def qqupdateDatabase(pin):
@@ -233,7 +276,7 @@ listener.register(5, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput5)
 listener.register(6, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput6)
 listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
 
-beeper(0,1)
+beeper(1,1,1)
 
 try:
     listener.activate()
