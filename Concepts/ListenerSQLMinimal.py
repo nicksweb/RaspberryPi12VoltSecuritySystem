@@ -57,6 +57,16 @@ def beeper(w,x,timeChoice): # Number of times to beep
 def pause():
     programPause = input("Press the <ENTER> key to continue...")
 
+def logAlarming(pin, status):
+    mycursor = cnx.cursor()
+
+    #status = pifacedigital.input_pins[pin].value
+
+    sql = "INSERT INTO piSS_Log_Arming (Port, Status) VALUES (%s, %s)"
+    val = (str(pin), str(status))
+    mycursor.execute(sql, val)
+    cnx.commit()
+
 def pirEventCall0(event):
     mycursor = cnx.cursor()
 
@@ -158,6 +168,8 @@ def RemoteInput4(event): # D Key on Remote
     beeper(DatabasePullStatus(databaseValue), 4, DatabasePullStatus(databaseValue))
     print("Finished insertion")
 
+    logAlarming(9999, DatabasePullStatus(databaseValue))
+
 def RemoteInput5(event): # C Key on Remote
     mycursor = cnx.cursor()
 
@@ -187,6 +199,8 @@ def RemoteInput5(event): # C Key on Remote
     beeper(DatabasePullStatus(databaseValue), 3, DatabasePullStatus(databaseValue))
     print("Finished insertion")
 
+    logAlarming(2, DatabasePullStatus(databaseValue))
+
 def RemoteInput6(event): # Button B on remote.
     mycursor = cnx.cursor()
 
@@ -215,6 +229,8 @@ def RemoteInput6(event): # Button B on remote.
     beeper(DatabasePullStatus(databaseValue), 2, DatabasePullStatus(databaseValue))
     print("Finished insertion")
 
+    logAlarming(1, DatabasePullStatus(databaseValue))
+
 def RemoteInput7(event):
     mycursor = cnx.cursor()
 
@@ -242,6 +258,8 @@ def RemoteInput7(event):
     #pifacedigital.output_pins[pin].toggle()
     beeper(DatabasePullStatus(databaseValue), 1, DatabasePullStatus(databaseValue))
     print("Finished insertion")
+
+    logAlarming(0, DatabasePullStatus(databaseValue))
 
 def qqupdateDatabase(pin):
     #cnx = mysql.connector.connect(user='pmatest',password='dummypassword',host='127.0.0.1',database='piSecuritySystem')
