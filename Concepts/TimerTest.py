@@ -43,5 +43,7 @@ def tick():
 
 
 # Example Usage
-t = InfiniteTimer(0.0, tick)
+t = InfiniteTimer(10, tick)
 t.start()
+time.sleep(50)
+t.cancel()
