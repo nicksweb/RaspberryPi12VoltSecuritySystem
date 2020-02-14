@@ -23,7 +23,7 @@ listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
 beeper(1,1,1)
 initZones() #InitZones - Sets zones in the Database to an initival value of 0 - May disable this in future release but for now leaving in.
 beeper(1,2,1)
-t = InfiniteTimer(15, UpdateGlobals)
+t = InfiniteTimer(5, UpdateGlobals)
 
 try:
     listener.activate()

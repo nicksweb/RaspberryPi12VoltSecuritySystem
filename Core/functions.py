@@ -12,7 +12,6 @@ from decimal import *
 from threading import Timer
 
 # Function Variables...
-cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
 #listener = pifacedigitalio.InputEventListener(chip=pifacedigital)
 
 # Global Variables for PiFaceDigitalIO
@@ -51,26 +50,28 @@ def timerBeeper(timerDecimal):
         return switcher.get(timerDecimal,"Invalid result fetches")
 
 def beeper(w,x,timeChoice): # Number of times to beep
-        # Do something
-        timeVal = float(timerBeeper(timeChoice))
+    # Do something
+    timeVal = float(timerBeeper(timeChoice))
 
-        for i in range(x):
-            time.sleep(timeVal)
-            pifacedigital.output_pins[0].value = w
-            # 1 is the Screamer...
-            print("Should be beeping")
-            time.sleep(timeVal)
-            pifacedigital.output_pins[0].value = 0
+    for i in range(x):
+        time.sleep(timeVal)
+        pifacedigital.output_pins[0].value = w
+        # 1 is the Screamer...
+        print("If you hear me I'm activating ", x)
+        time.sleep(timeVal)
+        pifacedigital.output_pins[0].value = 0
 
 def logAlarming(pin, status): # Logs the time an alarm is armed to the Database
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
-
     sql = "INSERT INTO piSS_Log_Arming (Port, Status) VALUES (%s, %s)"
     val = (str(pin), str(status))
     mycursor.execute(sql, val)
     cnx.commit()
+    cnx.close()
 
 def pirSensorLog(pin, status):
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     sql = "INSERT INTO piSS_SensorLog (Port, Status) VALUES (%s, %s)"
 
@@ -78,6 +79,7 @@ def pirSensorLog(pin, status):
 
     mycursor.execute(sql, val)
     cnx.commit()
+    cnx.close()
     print('Sensor', pin, 'is ', status, "record inserted.")
     print("Finished insertion")
 
@@ -106,6 +108,7 @@ def pirEventCall3(event):
     checkZone(pin)
 
 def remoteSensorLog(pin, status):
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     sql = "INSERT INTO piSS_SensorLog (Port, Status) VALUES (%s, %s)"
 
@@ -113,35 +116,43 @@ def remoteSensorLog(pin, status):
 
     mycursor.execute(sql, val)
     cnx.commit()
+    cnx.close()
     print('Sensor', pin, 'is ', status, "record inserted.")
     print("Finished insertion")
 
 def PISSZoneStatus(zone):
     sql = "select * from piSS_Zones Where Zone = %d;" % (zone)
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     mycursor.execute(sql)
     result = mycursor.fetchone()
+    cnx.close()
     return result
 
 def remoteSensorLogSelect(zone):
     sql = "select * from piSS_Zones Where Zone = %d;" % (zone)
-
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     mycursor.execute(sql)
     result = mycursor.fetchone()
+    cnx.close()
     return result
 
 def RemoteUpdateSetZones(zone, status):
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     sql = "Update piSS_Zones Set Status = %d WHERE Zone BETWEEN 0 AND %d;" % (status, zone)
     mycursor.execute(sql)
     cnx.commit()
+    cnx.close()
 
 def RemoteUpdateSingleZone(zone, status):
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     sql = "Update piSS_Zones Set Status = %d WHERE Zone = %d;" % (status, zone)
     mycursor.execute(sql)
     cnx.commit()
+    cnx.close()
 
 def RemoteInput4(event): # D Key on Remote
     zone = 9999
@@ -192,18 +203,17 @@ def checkZone(zone):
    # Check if zone is armed in Global Variable - It's in the Database Already - But it's quicker to access a
    # local variable.
 
-   print("ZONE", zone)
+   print("ZONE:", zone)
 
    if globals.arrayStatusArmed[zone] == 1:
       globals.CurrentTriggers += 1
 
    if sum(globals.arrayStatusArmed) == 0:
       globals.CurrentTriggers = 0
-      print("Sum of sensors is 0")
 
    print(globals.CurrentTriggers)
 
-   if globals.CurrentTriggers >= globals.MinAlarmTriggers:
+   if globals.CurrentTriggers >= globals.MinAlarmTriggers and globals.AlarmCalled == 0:
       aa = threading.Thread(target=ActivateAlarm, args=(1,))
       print("Starting Alarm Thread")
       globals.thread_list.append(aa)
@@ -211,33 +221,87 @@ def checkZone(zone):
 
       # Cleaning up
       globals.CurrentTriggers = 0
-      initZones()
+      globals.AlarmCalled = 1
+      # initZones()  Use only for testing - Used to set Database values back to 0 for Alarm's Activation Status - If using in producti on - Once alarm is activated
+      #             It will not reactivate after it's first activation.
+
+def Screamer():
+
+    while (globals.AlarmAudible==1 and globals.AlarmCalled == 1):
+        while (globals.AlarmTempMute == 0):
+            # Screamer is now on.
+            pifacedigital.output_pins[2].value = 1
+            print("Alarm is sounding")
+            time.sleep(1)
+
+        while (globals.AlarmTempMute == 1):
+            # Mutes the Alarm if sounding for longer than AlarmTime (Refer to ScreamerControl)
+            pifacedigital.output_pins[2].value = 0
+            print("Alarm is muted")
+            time.sleep(1)
+
+    # Set Screamer to off just in case.
+    pifacedigital.output_pins[2].value = 0
+
+def ScreamerOff():
+    pifacedigital.output_pins[2].value = 0
+    # Screamer is now off.
+    print("Alarm is off now...")
+
+def ScreamerControl():
+    while (globals.AlarmAudible==1 and globals.AlarmCalled == 1):
+        if (globals.AlarmTempMute == 0):
+            print("Alarm is Sounding... Sleeping Alarm for, ", globals.AlarmTime, " seconds.")
+            time.sleep(globals.AlarmTime)
+            globals.AlarmTempMute = 1 # Switch to Once
+
+
+        if (globals.AlarmTempMute == 1):
+            print("Alarm is Muted... Muting Alarm for, ", globals.AlarmTime, " seconds.")
+            time.sleep(globals.AlarmTime)
+            globals.AlarmTempMute = 0
+
 
 def ActivateAlarm(name):
+    # Initiate Class for Screamer...
+    # Class is used so it can be cancelled easily.
+    #InfTimerScreamer = InfiniteTimer(10, Screamer)
+    aaAlarm = threading.Thread(target=Screamer)
+    aaAlarmControl = threading.Thread(target=ScreamerControl)
+    print("Starting Alarm Thread")
+    globals.thread_list.append(aaAlarm)
+    globals.thread_list.append(ScreamerControl)
+
+
     # Check Database for Silence is enabled...
     returnedStatus = PISSZoneStatus(10001)
     databaseValue11x = returnedStatus[3]
     globals.AlarmAudible=databaseValue11x
 
-    # Initiate Class for Screamer...
-    InfTimerScreamer = InfiniteTimer(15, Screamer)
-
-    if (globals.AlarmAudible==1):
-        InfTimerScreamer.start()
+    if (globals.AlarmAudible==1 and globals.AlarmCalled == 1):
         #Carry out action...
-        print("Thread %s: starting", name)
-        time.sleep(2)
-        beeper(1, 2, 1)
-        print("Thread %s: finishing", name)
+        #InfTimerScreamer.start()
+        aaAlarm.start()
+        aaAlarmControl.start()
 
+    #time.sleep(10)
+    # Send Email Thread (Function)
 
+    while(sum(globals.arrayStatusArmed) > 0):
+        # Do something...
+        #print("In the while loop")
+        time.sleep(1)
 
-    # Set Screamer to on.
+    #InfTimerScreamer.cancel()
+    ScreamerOff()
+    globals.AlarmCalled = 0
+    globals.AlarmTempMute = 0
+    print("Alarm should now be off")
+    # Set Screamer to off.
 
     # Send an email / SMS to the user / Whatapp / Singal Whatever is avaiable API wise.
     # Set of Screamer... for 5 mins...
     # ... if (globals.AlarmAudible)
-
 
 def UpdateGlobals():
     # UpdateGlobals Class goes here... Function...
