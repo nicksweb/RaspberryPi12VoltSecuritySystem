@@ -34,7 +34,7 @@ def DatabasePullStatus(i):
 
 def timerBeeper(timerDecimal):
         switcher={
-            0: Decimal(1),
+            0: Decimal(0.5),
             1: Decimal(0.2)
         }
         return switcher.get(timerDecimal,"Invalid result fetches")
@@ -42,12 +42,17 @@ def timerBeeper(timerDecimal):
 def beeper(w,x,timeChoice): # Number of times to beep
     # Do something
     timeVal = float(timerBeeper(timeChoice))
+    
+    if(w == 0):     # Change timeVal to 0.5 so that when alarm is disabling it's a long beep. 
+        timeVal = float(0.5)
+        # Short beeps remain the same at 0.2 (As per timerBeeper function above). 
+        w = 1 # Set w to 1 so output pin will be high (On)
 
     for i in range(x):
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = w
         # 1 is the Screamer...
-        print("If you hear me I'm activating ", x)
+        print("Beeping: ", x, " Time: ", timeVal)
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = 0
 
@@ -214,8 +219,11 @@ def checkZone(zone):
       #             It will not reactivate after it's first activation.
 
 def Screamer():
+    
+    time.sleep(2) # Short delay to let ScreamerControl Catch-up for AlarmDelay if used... 
 
     while (globals.AlarmAudible==1 and globals.AlarmCalled == 1):
+        
         while (globals.AlarmTempMute == 0 and globals.AlarmCalled == 1):
             # Screamer is now on.
             pifacedigital.output_pins[2].value = 1
@@ -239,6 +247,26 @@ def ScreamerOff():
 def ScreamerControl():
 
     x = 0
+    
+    
+    
+    while(globals.AlarmDelay >= x):
+        AlarmTempMute = 1
+        time.sleep(1)
+        print("Delaying Alarm")
+        #Start Beeper in separate thread so it does't slow this thread down. 
+        if (x == 0): # Only start the thread once. 
+            ad = threading.Thread(target=beeper, args=(1,globals.AlarmDelay,0))
+            ad.start()
+        x += 1 
+        
+        if globals.AlarmDelay == x:
+            x = 0
+            AlarmTempMute = 0
+            print("Delay finished")
+            break
+    
+    x = 0
 
     while (globals.AlarmAudible==1 and globals.AlarmCalled == 1 and globals.AlarmLoop >= x):
         if (globals.AlarmTempMute == 0):
@@ -251,6 +279,12 @@ def ScreamerControl():
             print("Alarm is Muted... Muting Alarm for, ", globals.AlarmTime, " seconds.")
             time.sleep(globals.AlarmTime)
             globals.AlarmTempMute = 0
+
+        if (globals.AlarmCalled == 0):
+            globals.AlarmTempMute = 0
+            print("Alarm control has ended...")
+            break
+
         x += 1
 
 def ActivateAlarm(name):
@@ -312,16 +346,17 @@ def ActivateAlarm(name):
           globals.AlarmAudible=databaseValue11x
 
           print("Starting all the alarm Threads and sending an email.")
-          aaAlarm.start()
           aaAlarmControl.start()
+          time.sleep(globals.AlarmDelay)
+          aaAlarm.start()
           aaEmailNotification.start()
 
           globals.run_once = 1
 
        if globals.AlarmClear==1 or globals.arrayStatusArmed[globals.ZoneinAlarm] == 0:
            #InfTimerScreamer.cancel()
-           globals.AlarmClear = 0
            globals.AlarmCalled = 0
+           RemoteUpdateSingleZone(10003, 0) # Update AlarmClear in DB.
            globals.CurrentTriggers = [0,0,0,0]
            globals.AlarmTempMute = 0
            globals.run_once = 0

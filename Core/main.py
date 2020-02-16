@@ -46,6 +46,6 @@ try:
 except (KeyboardInterrupt, SystemExit):
     print("\n Ending Process")
     listener.deactivate()
-    listener. destroy()
+    listener.destroy()
     t.cancel()
     cnx.close()

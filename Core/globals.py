@@ -34,6 +34,7 @@ AlarmLoop = 10 # How many times should the alarm loop before switching off - 10 
 AlarmCalled = 0 # Default to 0 as it ensures alarm loop isn't recalled (Calling an endless number of threads).
 AlarmTempMute = 0
 AlarmClear=0
+AlarmDelay=20
 
 reedSwitches=[2,3]
 
