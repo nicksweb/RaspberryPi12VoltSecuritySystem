@@ -28,18 +28,20 @@ MinAlarmTriggers = 4 # Set a threshold before alarm will sound
 CurrentTriggers = [0,0,0,0] # Always starts at 0 and resets to 0 when system is not armed.
 #Status_Armed = 0 # Changes to 1 if an Alarm is armed. MAY need to change this to an array - To reduce Database Calls.
 arrayStatusArmed = [0,0,0,0]
-AlarmAudible = 1 # Intial Value for Screamer is 1 (Can be set from Database and variable is overridden)
+AlarmAudible = 0 # Intial Value for Screamer is 1 (Can be set from Database and variable is overridden)
 AlarmTime = 30 # 300 seconds is the maximun time for an Australian Alarm.
-AlarmLoop = 10 # How many times should the alarm loop before switching off - 10 Times is 1 Hour approx.
+AlarmLoop = 20 # How many times should the alarm loop before switching off - 10 Times is 1 Hour approx.
 AlarmCalled = 0 # Default to 0 as it ensures alarm loop isn't recalled (Calling an endless number of threads).
 AlarmTempMute = 0
 AlarmClear=0
-AlarmDelay=20
+AlarmDelay=20  # Delaying the time you have to get out before the alarm detects threats - Also the Grace period for switching off the alarm. 
+Alarm_Delay=0 # Add on increments for each time the remote is pressed. 
 
 reedSwitches=[2,3]
 
 ZoneinAlarm=99  # 99 is used as an initialization value and the fact there's no 99 sensor.
 run_once=0
+alarm_delay = 0 # Used for preventing sensors from triggering alarm during grace period. 
 
 # Global Threads
 thread_list = [] # Used for Threading.
