@@ -11,10 +11,10 @@ from alerts import *
 
 # Main application begins below.
 # Connect to the database
-listener.register(0, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall0)
+listener.register(0, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall0) # Falling is for a PIR
 listener.register(1, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall1)
 listener.register(2, pifacedigitalio.IODIR_RISING_EDGE, pirEventCall2)
-listener.register(3, pifacedigitalio.IODIR_RISING_EDGE, pirEventCall3)
+listener.register(3, pifacedigitalio.IODIR_RISING_EDGE, pirEventCall3)   #Rising is for a Reed Switch
 listener.register(4, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput4)
 listener.register(5, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput5)
 listener.register(6, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput6)
