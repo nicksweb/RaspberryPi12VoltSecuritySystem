@@ -408,6 +408,8 @@ def ActivateAlarm(name):
 
     returnedStatus = getLastSensorLog(globals.ZoneinAlarm)
     zoneinfo = PISSZoneStatus(globals.ZoneinAlarm)
+    
+    setConfigurationSettings('ZoneinAlarm',globals.ZoneinAlarm)
 
     aaEmailNotification = threading.Thread(target=sendNotification, args=("Urgent - Alarm Notifcation - " + str(returnedStatus[0]),"Zone " + str(zoneinfo[2]) + " is in Alarm","Bryony Crt","Time of Incident: " + str(returnedStatus[0]),"nicholas@suburbanau.com"))
         
@@ -418,7 +420,7 @@ def ActivateAlarm(name):
 
     while (globals.AlarmCalled==1): # Don't need this anymore sum(globals.arrayStatusArmed) > 0 and ...
        # Do something...
-       #print("In the while loop")
+       print("Waiting at alarm clear")       
  
        if globals.run_once == 0 and globals.AlarmClear == 0 and globals.arrayStatusArmed[globals.ZoneinAlarm] == 1:
           log("Starting Alarm Threads - ActivateAlarm (True) - Run_Once")
@@ -437,24 +439,28 @@ def ActivateAlarm(name):
           aaEmailNotification.start()
 
           globals.run_once = 1
-
-       if globals.AlarmCalled == 0 or globals.AlarmClear==1 or globals.arrayStatusArmed[globals.ZoneinAlarm] == 0:
-           #InfTimerScreamer.cancel()
-           RemoteUpdateSingleZone(10003, 0) # Update AlarmClear in DB.
-           globals.CurrentTriggers = [0,0,0]
-           globals.AlarmTempMute = 0
-           globals.AlarmCalled=0
-           globals.run_once = 0
-           globals.ZoneinAlarm = 99
-           ScreamerOff()
-           globals.Arming_Delay=0
-           globals.Alarming_Delay=0
-           globals.AlarmClear=0 
-           time.sleep(1)
-           ScreamerOff()
-           log("\n\tAlarm should now be off...")
-           # Set Screamer to off.
-           break
+    
+       while globals.AlarmCalled!=0 or globals.AlarmClear!=1 or globals.arrayStatusArmed[globals.ZoneinAlarm] != 0:
+           
+           if (globals.AlarmCalled==0 or globals.AlarmClear==1 or globals.arrayStatusArmed[globals.ZoneinAlarm] == 0):
+               #InfTimerScreamer.cancel()
+               RemoteUpdateSingleZone(10003, 0) # Update AlarmClear in DB.
+               globals.CurrentTriggers = [0,0,0]
+               globals.AlarmTempMute = 0
+               globals.AlarmCalled=0
+               globals.run_once = 0
+               globals.ZoneinAlarm = 99
+               ScreamerOff()
+               globals.Arming_Delay=0
+               globals.Alarming_Delay=0
+               globals.AlarmClear=0 
+               time.sleep(1)
+               ScreamerOff()
+               setConfigurationSettings('ZoneinAlarm',globals.ZoneinAlarm)
+               log("\n\tAlarm should now be off...")
+               # Set Screamer to off.
+               break
+               #time.sleep(1)
 
        time.sleep(1)
 
@@ -519,6 +525,18 @@ def getConfigurationSettings(key): #Only ran once at program start-up and then e
     result = mycursor.fetchone()
     cnx.close()
     return result
+    
+def setConfigurationSettings(key,value):
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
+    mycursor = cnx.cursor()
+    sql = "Update piSS_Settings Set Value=%s Where SettingKey=%s;" 
+    val = (value, key)
+    mycursor.execute(sql, val)
+    cnx.commit()
+    cnx.close()
+    
+    #zoneinfo = PISSZoneStatus(pin)
+    #log(str('\nZone Set:\t%s\n' % (zoneinfo[2])))
 
 def getLastSensorLog(zone): #Only ran once at program start-up and then every 30 minutes.
     sql = "Select * from piSS_SensorLog Where Port=%d Order By ID Desc Limit 1;" % (zone)
