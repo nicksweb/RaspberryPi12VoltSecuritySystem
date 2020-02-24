@@ -19,6 +19,16 @@ smtpPort=465
 mailRecip=('emailrecip@test.com','emailrecip2@test.com')
 # Set the Type such as TLS / SSL in sendmail.py
 
+# Globals for Key Fobs 
+keyAList = [0,1,2,3]
+# keyB is automatically used as the off key for A zones. 
+keyBList = [0,1] # Selected Zone only 
+keyCList = [3] # Unassigned...                  #Use 99 for an unsigned key. 
+
+keyA=0
+keyB=0
+keyC=0
+
 # globals.py for monitor.py and PiAlarmSystem
 # Define necessary globals here as needed...
 
@@ -46,6 +56,9 @@ alarm_delay=0 # Used for preventing sensors from triggering alarm during grace p
 Arming_Delay=0 # Used a boolean
 ArmingDelay=20
 ArmingDelayRunning=0 # Used by functions for counting.
+
+# Used for Emergency Alarm (Instant ALarm)
+EmergencyActivated=0
 
 # Display Zone information to the screen.
 loggingEnabled=1

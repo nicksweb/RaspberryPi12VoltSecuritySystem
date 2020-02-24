@@ -182,7 +182,51 @@ def RemoteUpdateSingleZone(zone, status):
     cnx.commit()
     cnx.close()
 
-def RemoteInput4(event): # D Key on Remote
+def RemoteInput4(event): # D Key on Remote # Emergency Mode (Red Button)
+    zone = 9998
+    returnedStatus = remoteSensorLogSelect(zone)
+    databaseValue = returnedStatus[3]
+
+    RemoteUpdateSingleZone(zone, DatabasePullStatus(databaseValue))
+    #beeper(DatabasePullStatus(databaseValue), 4, DatabasePullStatus(databaseValue))
+    logAlarming(9998, DatabasePullStatus(databaseValue))
+    
+    if(globals.EmergencyActivated == 0): #
+        globals.EmergencyActivated = 1
+        aa = threading.Thread(target=PersonalEmergency)
+        globals.thread_list.append(aa)
+        aa.start()
+    else:
+        globals.EmergencyActivated = 0 
+        globals.AlarmCalled=0
+     
+def PersonalEmergency(): 
+      log(str('\n**** Emergency Mode ***'))
+      log('\n\tAlarm Thread Starting.\n')
+      
+      globals.AlarmCalled = 1
+      
+      while(globals.EmergencyActivated):
+          # Screamer is 1.
+          pifacedigital.output_pins[1].value = globals.AlarmAudible # This would usually be one when not being tested.
+          log("\n\n\t\tPersonalEmergency IS ON!!!!!\n\n")
+          # Output pin 3 is strobe on the flashing siren.
+          pifacedigital.output_pins[3].value = 1
+          # Output pin 2 is the solid light on the siren.
+          pifacedigital.output_pins[2].value = 0
+          #print("Alarm is sounding")
+          time.sleep(1)
+          pifacedigital.output_pins[1].value = globals.AlarmAudible 
+          pifacedigital.output_pins[3].value = 1
+          pifacedigital.output_pins[2].value = 1
+          #print("Alarm is muted")
+          time.sleep(1)
+
+      globals.AlarmCalled = 0
+      globals.CurrentTriggers = [0,0,0,0]
+      ScreamerOff()
+    
+def RemoteInput4x(event): # D Key on Remote  - Old Usage - Instead using above as a type of Emergency Button. 
     zone = 9999
     returnedStatus = remoteSensorLogSelect(zone)
     databaseValue = returnedStatus[3]
@@ -197,51 +241,50 @@ def RemoteInput4(event): # D Key on Remote
     logAlarming(9999, DatabasePullStatus(databaseValue))
 
 def RemoteInput5(event): # C Key on Remote
-    zone = 2
-    returnedStatus = remoteSensorLogSelect(zone)
-    databaseValue = returnedStatus[3]
+    # Using for loop to loop through the A key zones.
+    if globals.keyC: globals.keyC=0
+    else: 
+        globals.keyC = 1
+        aa = threading.Thread(target=delayArming)
+        globals.thread_list.append(aa)
+        aa.start()        
+    for i in globals.keyCList: 
+        
+        print(globals.keyC)
+        beeper(globals.keyC,1,globals.keyC)
+        RemoteUpdateSingleZone(i, globals.keyC)            
+        globals.arrayStatusArmed[i] = globals.keyC            
+        logAlarming(i, globals.keyC)
 
-    if(globals.arrayStatusArmed[zone]==0): #
+def RemoteInput6(event): # B Key on remote.
+    # Using for loop to loop through the A key zones.
+    if globals.keyB: globals.keyB=0
+    else: 
+        globals.keyB = 1
+        aa = threading.Thread(target=delayArming)
+        globals.thread_list.append(aa)
+        aa.start()        
+    for i in globals.keyBList: 
+        
+        print(globals.keyB)
+        beeper(globals.keyB,1,globals.keyB)
+        RemoteUpdateSingleZone(i, globals.keyB)            
+        globals.arrayStatusArmed[i] = globals.keyA            
+        logAlarming(i, globals.keyA)
+
+def RemoteInput7(event): # A Key on remote.
+    # Using for loop to loop through the A key zones.
+    if globals.keyA: globals.keyA=0
+    else: 
+        globals.keyA = 1
         aa = threading.Thread(target=delayArming)
         globals.thread_list.append(aa)
         aa.start()
-
-
-    RemoteUpdateSingleZone(zone, DatabasePullStatus(databaseValue))
-    beeper(DatabasePullStatus(databaseValue), 3, DatabasePullStatus(databaseValue))
-    logAlarming(2, DatabasePullStatus(databaseValue))
-    globals.arrayStatusArmed[zone] = DatabasePullStatus(databaseValue)
-
-
-def RemoteInput6(event): # Button B on remote.
-    zone = 1
-    returnedStatus = remoteSensorLogSelect(zone)
-    databaseValue = returnedStatus[3]
-
-    if(globals.arrayStatusArmed[zone]==0): #
-        aa = threading.Thread(target=delayArming)
-        globals.thread_list.append(aa)
-        aa.start()
-
-    RemoteUpdateSingleZone(zone, DatabasePullStatus(databaseValue))
-    beeper(DatabasePullStatus(databaseValue), 2, DatabasePullStatus(databaseValue))
-    logAlarming(1, DatabasePullStatus(databaseValue))
-    globals.arrayStatusArmed[zone] = DatabasePullStatus(databaseValue)
-
-def RemoteInput7(event): # Button A on remote.
-    zone = 0
-    returnedStatus = remoteSensorLogSelect(zone)
-    databaseValue = returnedStatus[3]
-
-    if(globals.arrayStatusArmed[zone]==0): #
-        aa = threading.Thread(target=delayArming)
-        globals.thread_list.append(aa)
-        aa.start()
-
-    RemoteUpdateSingleZone(zone, DatabasePullStatus(databaseValue))
-    beeper(DatabasePullStatus(databaseValue), 1, DatabasePullStatus(databaseValue))
-    logAlarming(0, DatabasePullStatus(databaseValue))
-    globals.arrayStatusArmed[zone] = DatabasePullStatus(databaseValue)
+    for i in globals.keyAList:        
+        beeper(globals.keyA,1,globals.keyA)
+        RemoteUpdateSingleZone(i, globals.keyA)            
+        globals.arrayStatusArmed[i] = globals.keyA            
+        logAlarming(i, globals.keyA)
 
 def initZones(): # Ran at program start-up to set all zones to off.
   RemoteUpdateSingleZone(0, 0)

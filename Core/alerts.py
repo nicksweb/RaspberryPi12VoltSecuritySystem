@@ -17,9 +17,9 @@ def sendNotification(title, subject, mailFrom, messageDetail, mailTo):
 
     #plaintext = "Alarm Notifcation Test"
 
-    ourmailsender.set_message(plaintext, title, mailFrom)
+    #ourmailsender.set_message(plaintext, title, mailFrom)
 
-    ourmailsender.set_recipients(globals.mailRecip) # Don't need to specify address in array as it's already in that format (a turple)
+    #ourmailsender.set_recipients(globals.mailRecip) # Don't need to specify address in array as it's already in that format (a turple)
 
-    ourmailsender.connect()
-    ourmailsender.send_all()
+    #ourmailsender.connect()
+    #ourmailsender.send_all()
