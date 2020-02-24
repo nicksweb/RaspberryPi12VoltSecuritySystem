@@ -8,6 +8,7 @@ import monitor
 # Import functions, alerts
 from functions import *
 from alerts import *
+from webapi import *
 
 # Main application begins below.
 # Connect to the database
@@ -40,6 +41,7 @@ try:
     listener.activate()
     # Example Usage
     t.start()
+    app.run(host='0.0.0.0')
     print("All Activated")
 
 # Close Database and destroy listeners.

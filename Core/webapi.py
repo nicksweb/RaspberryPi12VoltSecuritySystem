@@ -7,16 +7,30 @@ def hello():
      return "Hello World"     
      beeper(1,2,1)
      
-@app.route('/zone0')
-def run():
+@app.route('/api')
+def zone0():
     RemoteInput7("run")
     return "Zone0"
+
+@app.route('/RemoteInput4')
+def zone4():
+    RemoteInput4("run")
+    return "Zone4"
+
+@app.route('/RemoteInput5')
+def zone5():
+    RemoteInput5("run")
+    return "Zone5"
+
+@app.route('/RemoteInput6')
+def zone6():
+    RemoteInput6("run")
+    return "Zone6"
     
-@app.route('/beep')
-def hello2():
-     beeper(1,2,1)
-     return "Hello World2"     
-     
+@app.route('/RemoteInput7')
+def zone7():
+    RemoteInput7("run")
+    return "Zone7"
      
      
 if __name__ == '__main__':
