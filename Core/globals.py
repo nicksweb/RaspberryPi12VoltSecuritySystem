@@ -1,5 +1,5 @@
 #import functions
-
+from OpenSSL import SSL
 from array import array
 #from functions import *
 
@@ -56,6 +56,7 @@ alarm_delay=0 # Used for preventing sensors from triggering alarm during grace p
 Arming_Delay=0 # Used a boolean
 ArmingDelay=20
 ArmingDelayRunning=0 # Used by functions for counting.
+delayArmingx=0
 
 # Used for Emergency Alarm (Instant ALarm)
 EmergencyActivated=0
@@ -65,3 +66,10 @@ loggingEnabled=1
 
 # Global Threads
 thread_list = [] # Used for Threading.
+
+
+import os
+context=SSL.Context(SSL.SSLv23_METHOD)
+cer = os.path.join(os.path.dirname(__file__),'piss.crt') 
+key = os.path.join(os.path.dirname(__file__),'piss.key')
+

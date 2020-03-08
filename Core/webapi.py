@@ -1,5 +1,11 @@
 from flask import Flask
-from functions import * 
+from OpenSSL import SSL
+from functions import *
+
+import os
+context=SSL.Context(SSL.SSLv23_METHOD)
+cer = os.path.join(os.path.dirname(__file__),'piss.crt') 
+key = os.path.join(os.path.dirname(__file__),'piss.key')
 app = Flask(__name__)
 
 @app.route('/')
@@ -7,11 +13,6 @@ def hello():
      return "Hello World"     
      beeper(1,2,1)
      
-@app.route('/api')
-def zone0():
-    RemoteInput7("run")
-    return "Zone0"
-
 @app.route('/RemoteInput4')
 def zone4():
     RemoteInput4("run")
@@ -34,5 +35,9 @@ def zone7():
      
      
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    #globals.context=(globals.cer,globals.key)
+    #app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True)
+    #app.run(host='0.0.0.0',port=5001,ssl_context='adhoc',debug=True) #
+    app.run(host='0.0.0.0') #
+    # // Guide for SSL blog.miguelgrinberg.com/post/running-your-flask-application-over-https
     

@@ -33,34 +33,30 @@ def DatabasePullStatus(i):
     return switcher.get(float(i),"Invalid result fetched")
 
 def delayArming(): # Used for delaying a zone from detecting movement until specified.
- 
-    #if globals.delayArmingx == 0:
-    #   globals.Arming_Delay = 1
-        
-    if globals.Arming_Delay == 1: 
-        
+    x = 0
+
+    if(globals.Arming_Delay == 1 and globals.AlarmCalled==0):
+
         if globals.ArmingDelayRunning+globals.ArmingDelay < 60:
             globals.ArmingDelayRunning+=globals.ArmingDelay
         else:
             globals.ArmingDelayRunning=(60-globals.ArmingDelay)
-        
-    if(globals.Arming_Delay == 0 and globals.ArmingDelayRunning == 0 and globals.delayArmingx == 0): # and x < globals.ArmingDelay+globals.ArmingDelayRunning and globals.AlarmCalled==0
-        # Prevent threads from being ran.     
-        globals.Arming_Delay=1   
 
-        #log(str('Delaying Arming for approx:\t%d\t' % (globals.ArmingDelayRunning+globals.ArmingDelay)))
 
-        while ( globals.delayArmingx < globals.ArmingDelayRunning+globals.ArmingDelay and globals.Arming_Delay == 1):
+    if(globals.Arming_Delay == 0 and x < globals.ArmingDelay+globals.ArmingDelayRunning and globals.AlarmCalled==0):
+        globals.Arming_Delay=1 # Prevent threads from being ran.
+
+        log(str('Delaying Arming for approx:\t%d\t' % (globals.ArmingDelayRunning+globals.ArmingDelay)))
+
+        while ( x < globals.ArmingDelayRunning+globals.ArmingDelay):
             time.sleep(1)
-
-            log(str('Delaying Arming for approx:\t%d\t<\t%d\t' % (globals.delayArmingx, globals.ArmingDelayRunning+globals.ArmingDelay)))
-            globals.delayArmingx += 1
-                       
-            if globals.delayArmingx == globals.ArmingDelayRunning+globals.ArmingDelay:
+            log(str('Delaying Arming for approx:\t%d\t<\t%d\t' % (x, globals.ArmingDelayRunning+globals.ArmingDelay)))
+            x += 1
+            if x == globals.ArmingDelayRunning+globals.ArmingDelay:
                 globals.Arming_Delay=0
                 globals.ArmingDelayRunning=0
                 globals.AlarmCalled = 0
-                globals.delayArmingx = 0
+
 
 def timerBeeper(timerDecimal):
         switcher={
@@ -82,8 +78,8 @@ def beeper(w,x,timeChoice): # Number of times to beep
 
     for i in range(x):
         time.sleep(timeVal)
-        pifacedigital.output_pins[0].value = 0 #w
-        pifacedigital.output_pins[2].value = 0 #w
+        pifacedigital.output_pins[0].value = w
+        pifacedigital.output_pins[2].value = w
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = 0
         pifacedigital.output_pins[2].value = 0
@@ -339,7 +335,7 @@ def checkZone(zone):
 
 def Screamer():
 
-    time.sleep(3) # Short delay to let ScreamerControl Catch-up for AlarmDelay if used...
+    time.sleep(2) # Short delay to let ScreamerControl Catch-up for AlarmDelay if used...
 
     while (globals.AlarmCalled == 1):  # Removed globals.AlarmAudible (globals.AlarmAudible==1 and )
 
