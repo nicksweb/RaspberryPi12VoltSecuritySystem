@@ -57,6 +57,7 @@ Arming_Delay=0 # Used a boolean
 ArmingDelay=20
 ArmingDelayRunning=0 # Used by functions for counting.
 delayArmingx=0
+runOnce_AlarmDelay=0
 
 # Used for Emergency Alarm (Instant ALarm)
 EmergencyActivated=0

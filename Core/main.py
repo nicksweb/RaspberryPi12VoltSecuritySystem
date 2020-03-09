@@ -12,6 +12,7 @@ from webapi import *
 
 # Main application begins below.
 # Connect to the database
+
 listener.register(0, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall0) # Falling is for a PIR
 listener.register(1, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall1)
 listener.register(2, pifacedigitalio.IODIR_RISING_EDGE, pirEventCall2)
@@ -37,23 +38,22 @@ globals.smtpServer=getConfigurationSettings('smtpServer')
 globals.smtpPort=getConfigurationSettings('smtpPort')
 globals.mailRecip=getConfigurationSettings('mailRecip')
 
-listener.activate()
-t.start()
 
 try:
     
-    # Example Usage
-    
+    listener.activate()
+    t.start()
     print("All Activated")
-    #app.run(host='0.0.0.0')
     globals.context=(globals.cer,globals.key)
-    app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True) 
+    app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=False,use_reloader=False) 
+    #app.run(host='0.0.0.0')
     
+
 
 # Close Database and destroy listeners.
 except (KeyboardInterrupt, SystemExit):
     print("\n Ending Process")
     listener.deactivate()
-    listener.destroy()
+    #listener.destroy()
     t.cancel()
-    cnx.close()
+    #cnx.close()

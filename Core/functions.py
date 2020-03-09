@@ -33,35 +33,40 @@ def DatabasePullStatus(i):
     return switcher.get(float(i),"Invalid result fetched")
 
 def delayArming(): # Used for delaying a zone from detecting movement until specified.
- 
+    x= 0 
     #if globals.delayArmingx == 0:
     #   globals.Arming_Delay = 1
         
-    if globals.Arming_Delay == 1: 
-        
+    if (globals.Arming_Delay==1 and globals.AlarmCalled == 0):
         if globals.ArmingDelayRunning+globals.ArmingDelay < 60:
             globals.ArmingDelayRunning+=globals.ArmingDelay
+            globals.runOnce_AlarmDelay = 1
         else:
             globals.ArmingDelayRunning=(60-globals.ArmingDelay)
+            globals.runOnce_AlarmDelay = 1
         
-    while(globals.Arming_Delay != 1): # and x < globals.ArmingDelay+globals.ArmingDelayRunning and globals.AlarmCalled==0
+    if(globals.Arming_Delay == 0 and x < globals.ArmingDelay+globals.ArmingDelayRunning and globals.AlarmCalled==0):
         # Prevent threads from being ran.     
         globals.Arming_Delay=1
+        globals.runOnce_AlarmDelay=1
            
         #time.sleep(1)
         #log(str('Delaying Arming for approx:\t%d\t' % (globals.ArmingDelayRunning+globals.ArmingDelay)))
 
-        while ( globals.delayArmingx < globals.ArmingDelayRunning+globals.ArmingDelay and globals.Arming_Delay == 1):    
-            log(str('Delaying Arming for approx:\t%d\t<\t%d\t' % (globals.delayArmingx, globals.ArmingDelayRunning+globals.ArmingDelay)))
-            globals.delayArmingx += 1
+        while ( x < globals.ArmingDelayRunning+globals.ArmingDelay):    
+            
+            log(str('Delaying Arming for approx:\t%d\t<\t%d\t' % (x, globals.ArmingDelayRunning+globals.ArmingDelay)))
+            x += 1
             time.sleep(1)
+            
+            print("In Delay Loop") 
                        
-        if globals.delayArmingx == globals.ArmingDelayRunning+globals.ArmingDelay:
+            if x == globals.ArmingDelayRunning+globals.ArmingDelay:
                 globals.Arming_Delay=0
                 globals.ArmingDelayRunning=0
                 globals.AlarmCalled = 0
-                globals.delayArmingx = 0
-                break
+                #globals.delayArmingx = 0
+                globals.runOnce_AlarmDelay = 0
 
 def timerBeeper(timerDecimal):
         switcher={
@@ -122,25 +127,25 @@ def pirEventCall0(event):
     pin = 0
     status = pifacedigital.input_pins[pin].value
     pirSensorLog(pin, status)
-    checkZone(pin)
+    if globals.AlarmCalled==0: checkZone(pin) 
 
 def pirEventCall1(event):
     pin = 1
     status = pifacedigital.input_pins[pin].value
     pirSensorLog(pin, status)
-    checkZone(pin)
+    if globals.AlarmCalled==0: checkZone(pin)
 
 def pirEventCall2(event):
     pin = 2
     status = pifacedigital.input_pins[pin].value
     pirSensorLog(pin, status)
-    checkZone(pin)
+    if globals.AlarmCalled==0: checkZone(pin)
 
 def pirEventCall3(event):
     pin = 3
     status = pifacedigital.input_pins[pin].value
     pirSensorLog(pin, status)
-    checkZone(pin)
+    if globals.AlarmCalled==0: checkZone(pin)
 
 def remoteSensorLog(pin, status):
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
@@ -196,147 +201,79 @@ def RemoteInput4(event): # D Key on Remote # Emergency Mode (Red Button)
     #beeper(DatabasePullStatus(databaseValue), 4, DatabasePullStatus(databaseValue))
     logAlarming(9998, DatabasePullStatus(databaseValue))
     
-    if(globals.EmergencyActivated == 0): #
-        globals.EmergencyActivated = 1
-        aa = threading.Thread(target=PersonalEmergency)
-        globals.thread_list.append(aa)
-        aa.start()
-    else:
-        globals.EmergencyActivated = 0 
-        globals.AlarmCalled=0
+    PersonalEmergency(DatabasePullStatus(databaseValue))
      
-def PersonalEmergency(): 
+def PersonalEmergency(x): 
       log(str('\n**** Emergency Mode ***'))
       log('\n\tAlarm Thread Starting.\n')
       
-      globals.AlarmCalled = 1
+      globals.EmergencyActivated = x
+      print(globals.EmergencyActivated, "Emergency ActivateD")
       
-      while(globals.EmergencyActivated):
-          # Screamer is 1.
-          pifacedigital.output_pins[1].value = globals.AlarmAudible # This would usually be one when not being tested.
-          pifacedigital.output_pins[4].value = globals.AlarmAudible # This would usually be one when not being tested.
-          log("\n\n\t\tPersonalEmergency IS ON!!!!!\n\n")
-          # Output pin 3 is strobe on the flashing siren.
-          pifacedigital.output_pins[3].value = 1
-          # Output pin 2 is the solid light on the siren.
-          pifacedigital.output_pins[2].value = 0
-          #print("Alarm is sounding")
-          time.sleep(1)
-          pifacedigital.output_pins[1].value = globals.AlarmAudible 
-          pifacedigital.output_pins[3].value = 1
-          pifacedigital.output_pins[2].value = 1
+      if(x==1):
+          ScreamerStart()                             
+          globals.AlarmCalled=1
+          
+      else:
+          ScreamerStop()
+          aa = threading.Thread(target=delayArming)
+          #globals.thread_list.append(aa)
+          aa.start()
           #print("Alarm is muted")
-          time.sleep(1)
+          globals.AlarmCalled=0
 
-      globals.AlarmCalled = 0
-      globals.CurrentTriggers = [0,0,0,0]
-      ScreamerOff()
+def RemoteInput5(event):  # C Key on remote.
+    # Using for loop to loop through the C key zones.
+
+    aa = threading.Thread(target=delayArming)
+    #globals.thread_list.append(aa)
+    aa.start()
     
-def RemoteInput4x(event): # D Key on Remote  - Old Usage - Instead using above as a type of Emergency Button. 
-    zone = 9999
-    returnedStatus = remoteSensorLogSelect(zone)
-    databaseValue = returnedStatus[3]
-
-    if(databaseValue==0): #
-        aa = threading.Thread(target=delayArming)
-        globals.thread_list.append(aa)
-        aa.start()
-
-    RemoteUpdateSetZones(zone, DatabasePullStatus(databaseValue))
-    beeper(DatabasePullStatus(databaseValue), 4, DatabasePullStatus(databaseValue))
-    logAlarming(9999, DatabasePullStatus(databaseValue))
-
-def RemoteInput5(event): # C Key on Remote
-    # Using for loop to loop through the A key zones.
-    if globals.keyC: globals.keyC=0
-    else: 
-        globals.keyC = 1
-        aa = threading.Thread(target=delayArming)
-        globals.thread_list.append(aa)
-        aa.start()        
-    for i in globals.keyCList: 
+    globals.keyC = DatabasePullStatus(globals.keyC)
+       
         
-        print(globals.keyC)
+    for i in globals.keyCList:        
         beeper(globals.keyC,1,globals.keyC)
         RemoteUpdateSingleZone(i, globals.keyC)            
         globals.arrayStatusArmed[i] = globals.keyC            
         logAlarming(i, globals.keyC)
 
+       
 def RemoteInput6(event): # B Key on remote.
-    # Using for loop to loop through the A key zones.
-    if globals.keyB: globals.keyB=0
-    else: 
-        globals.keyB = 1
-        aa = threading.Thread(target=delayArming)
-        globals.thread_list.append(aa)
-        aa.start()        
-    for i in globals.keyBList: 
+    # Using for loop to loop through the B key zones.
+
+    aa = threading.Thread(target=delayArming)
+    #globals.thread_list.append(aa)
+    aa.start()
+    
+    globals.keyB = DatabasePullStatus(globals.keyB)
+       
         
-        print(globals.keyB)
+    for i in globals.keyBList:        
         beeper(globals.keyB,1,globals.keyB)
         RemoteUpdateSingleZone(i, globals.keyB)            
         globals.arrayStatusArmed[i] = globals.keyB            
-        logAlarming(i, globals.keyA)
+        logAlarming(i, globals.keyB)
 
+       
 def RemoteInput7(event): # A Key on remote.
-    #time.sleep(2)
+    # Using for loop to loop through the A key zones.
+
+    aa = threading.Thread(target=delayArming)
+    #globals.thread_list.append(aa)
+    aa.start()
     
-    status = pifacedigital.input_pins[7].value
+    globals.keyA = DatabasePullStatus(globals.keyA)
     
-    print(status)
-    
-    if globals.keyA: 
-        globals.keyA=0    
-        for i in globals.keyAList:        
-            beeper(globals.keyA,1,globals.keyA)
-            RemoteUpdateSingleZone(i, globals.keyA)            
-            globals.arrayStatusArmed[i] = globals.keyA            
-            logAlarming(i, globals.keyA)
-        return
-    
-    if globals.keyA == 0: 
-        globals.keyA = 1
-        aa = threading.Thread(target=delayArming)
-        globals.thread_list.append(aa)
-        aa.start()
+    if max(globals.arrayStatusArmed) > 0:
+        globals.keyA = 0    
         
-        for i in globals.keyAList:        
-           beeper(globals.keyA,1,globals.keyA)
-           RemoteUpdateSingleZone(i, globals.keyA)            
-           globals.arrayStatusArmed[i] = globals.keyA            
-           logAlarming(i, globals.keyA) # Using for loop to loop through the A key zones.
-        return   
-        
-def RemoteInput7x(event): # A Key on remote.
-    #time.sleep(2)
-    
-    status = pifacedigital.input_pins[7].value
-    
-    print(status)
-    
-    if globals.keyA: 
-        globals.keyA=0    
-        for i in globals.keyAList:        
-            beeper(globals.keyA,1,globals.keyA)
-            RemoteUpdateSingleZone(i, globals.keyA)            
-            globals.arrayStatusArmed[i] = globals.keyA            
-            logAlarming(i, globals.keyA)
-        return
-    
-    if globals.keyA == 0: 
-        globals.keyA = 1
-        aa = threading.Thread(target=delayArming)
-        globals.thread_list.append(aa)
-        aa.start()
-        
-        for i in globals.keyAList:        
-           beeper(globals.keyA,1,globals.keyA)
-           RemoteUpdateSingleZone(i, globals.keyA)            
-           globals.arrayStatusArmed[i] = globals.keyA            
-           logAlarming(i, globals.keyA) # Using for loop to loop through the A key zones.
-        return    
-        
-        
+    for i in globals.keyAList:        
+        beeper(globals.keyA,1,globals.keyA)
+        RemoteUpdateSingleZone(i, globals.keyA)            
+        globals.arrayStatusArmed[i] = globals.keyA            
+        logAlarming(i, globals.keyA)
+                    
     
 
 def initZones(): # Ran at program start-up to set all zones to off.
@@ -400,7 +337,6 @@ def ScreamerStop():
     pifacedigital.output_pins[3].value = 0
     pifacedigital.output_pins[4].value = 0
     pifacedigital.output_pins[2].value = globals.AlarmAudible
-    #print("Alarm is muted")
 
 def Screamer():
 
@@ -451,6 +387,9 @@ def ScreamerOff():
     pifacedigital.output_pins[4].value = 0 # Flashing Strobe Effect
     # Screamer is now off.
     print("Alarm is off now...")
+    aa = threading.Thread(target=delayArming)
+    #globals.thread_list.append(aa)
+    aa.start()
 
 def ScreamerControl():
 
