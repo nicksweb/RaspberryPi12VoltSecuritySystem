@@ -44,23 +44,24 @@ def delayArming(): # Used for delaying a zone from detecting movement until spec
         else:
             globals.ArmingDelayRunning=(60-globals.ArmingDelay)
         
-    if(globals.Arming_Delay == 0 and globals.ArmingDelayRunning == 0 and globals.delayArmingx == 0): # and x < globals.ArmingDelay+globals.ArmingDelayRunning and globals.AlarmCalled==0
+    while(globals.Arming_Delay != 1): # and x < globals.ArmingDelay+globals.ArmingDelayRunning and globals.AlarmCalled==0
         # Prevent threads from being ran.     
-        globals.Arming_Delay=1   
-
+        globals.Arming_Delay=1
+           
+        #time.sleep(1)
         #log(str('Delaying Arming for approx:\t%d\t' % (globals.ArmingDelayRunning+globals.ArmingDelay)))
 
-        while ( globals.delayArmingx < globals.ArmingDelayRunning+globals.ArmingDelay and globals.Arming_Delay == 1):
-            time.sleep(1)
-
+        while ( globals.delayArmingx < globals.ArmingDelayRunning+globals.ArmingDelay and globals.Arming_Delay == 1):    
             log(str('Delaying Arming for approx:\t%d\t<\t%d\t' % (globals.delayArmingx, globals.ArmingDelayRunning+globals.ArmingDelay)))
             globals.delayArmingx += 1
+            time.sleep(1)
                        
-            if globals.delayArmingx == globals.ArmingDelayRunning+globals.ArmingDelay:
+        if globals.delayArmingx == globals.ArmingDelayRunning+globals.ArmingDelay:
                 globals.Arming_Delay=0
                 globals.ArmingDelayRunning=0
                 globals.AlarmCalled = 0
                 globals.delayArmingx = 0
+                break
 
 def timerBeeper(timerDecimal):
         switcher={
@@ -82,8 +83,8 @@ def beeper(w,x,timeChoice): # Number of times to beep
 
     for i in range(x):
         time.sleep(timeVal)
-        pifacedigital.output_pins[0].value = 0 #w
-        pifacedigital.output_pins[2].value = 0 #w
+        pifacedigital.output_pins[0].value = w #w
+        pifacedigital.output_pins[2].value = w #w
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = 0
         pifacedigital.output_pins[2].value = 0
@@ -213,6 +214,7 @@ def PersonalEmergency():
       while(globals.EmergencyActivated):
           # Screamer is 1.
           pifacedigital.output_pins[1].value = globals.AlarmAudible # This would usually be one when not being tested.
+          pifacedigital.output_pins[4].value = globals.AlarmAudible # This would usually be one when not being tested.
           log("\n\n\t\tPersonalEmergency IS ON!!!!!\n\n")
           # Output pin 3 is strobe on the flashing siren.
           pifacedigital.output_pins[3].value = 1
@@ -277,8 +279,12 @@ def RemoteInput6(event): # B Key on remote.
         logAlarming(i, globals.keyA)
 
 def RemoteInput7(event): # A Key on remote.
-    # Using for loop to loop through the A key zones.
     #time.sleep(2)
+    
+    status = pifacedigital.input_pins[7].value
+    
+    print(status)
+    
     if globals.keyA: 
         globals.keyA=0    
         for i in globals.keyAList:        
@@ -286,17 +292,52 @@ def RemoteInput7(event): # A Key on remote.
             RemoteUpdateSingleZone(i, globals.keyA)            
             globals.arrayStatusArmed[i] = globals.keyA            
             logAlarming(i, globals.keyA)
-        
-    else: 
+        return
+    
+    if globals.keyA == 0: 
         globals.keyA = 1
         aa = threading.Thread(target=delayArming)
         globals.thread_list.append(aa)
         aa.start()
+        
         for i in globals.keyAList:        
            beeper(globals.keyA,1,globals.keyA)
            RemoteUpdateSingleZone(i, globals.keyA)            
            globals.arrayStatusArmed[i] = globals.keyA            
-           logAlarming(i, globals.keyA)
+           logAlarming(i, globals.keyA) # Using for loop to loop through the A key zones.
+        return   
+        
+def RemoteInput7x(event): # A Key on remote.
+    #time.sleep(2)
+    
+    status = pifacedigital.input_pins[7].value
+    
+    print(status)
+    
+    if globals.keyA: 
+        globals.keyA=0    
+        for i in globals.keyAList:        
+            beeper(globals.keyA,1,globals.keyA)
+            RemoteUpdateSingleZone(i, globals.keyA)            
+            globals.arrayStatusArmed[i] = globals.keyA            
+            logAlarming(i, globals.keyA)
+        return
+    
+    if globals.keyA == 0: 
+        globals.keyA = 1
+        aa = threading.Thread(target=delayArming)
+        globals.thread_list.append(aa)
+        aa.start()
+        
+        for i in globals.keyAList:        
+           beeper(globals.keyA,1,globals.keyA)
+           RemoteUpdateSingleZone(i, globals.keyA)            
+           globals.arrayStatusArmed[i] = globals.keyA            
+           logAlarming(i, globals.keyA) # Using for loop to loop through the A key zones.
+        return    
+        
+        
+    
 
 def initZones(): # Ran at program start-up to set all zones to off.
   RemoteUpdateSingleZone(0, 0)
@@ -324,6 +365,8 @@ def checkZone(zone):
       globals.CurrentTriggers[zone] = 0
 
    if globals.CurrentTriggers[zone] >= globals.MinAlarmTriggers and globals.AlarmCalled == 0 and globals.Arming_Delay == 0:
+      globals.AlarmCalled=1
+      
       log(str('\n%s Zone has triggered %s activation of the Zone\'s sensor' % (str(zoneinfo[2]),str(globals.CurrentTriggers[zone]))))
       log('\n\tAlarm Thread Starting.\n')
       aa = threading.Thread(target=ActivateAlarm, args=(zone,))
@@ -337,6 +380,28 @@ def checkZone(zone):
       # initZones()  Use only for testing - Used to set Database values back to 0 for Alarm's Activation Status - If using in producti on - Once alarm is activated
       #             It will not reactivate after it's first activation.
 
+
+def ScreamerStart():
+    # Screamer is 1.
+    #pifacedigital.output_pins[1].value = globals.AlarmAudible # This would usually be one when not being tested. # Usually globals.AlarmAudible but not enough power... 
+    log("\n\n\t\tSCREAMER IS ON!!!!!\n\n")
+    # Output pin 3 is strobe on the flashing siren.
+    pifacedigital.output_pins[3].value = 1
+    #pifacedigital.output_pins[4].value = globals.AlarmAudible
+    # Output pin 2 is the solid light on the siren.
+    pifacedigital.output_pins[2].value = 0
+    #print("Alarm is sounding")
+    time.sleep(1)
+            
+def ScreamerStop():
+    # Mutes the Alarm if sounding for longer than AlarmTime (Refer to ScreamerControl)
+    log("\n\n\t\tSCREAMER IS Off!!!!!\n\n")
+    pifacedigital.output_pins[1].value = 0
+    pifacedigital.output_pins[3].value = 0
+    pifacedigital.output_pins[4].value = 0
+    pifacedigital.output_pins[2].value = globals.AlarmAudible
+    #print("Alarm is muted")
+
 def Screamer():
 
     time.sleep(3) # Short delay to let ScreamerControl Catch-up for AlarmDelay if used...
@@ -349,21 +414,23 @@ def Screamer():
 
         while (globals.AlarmTempMute == 0 and globals.AlarmCalled == 1 and globals.Alarm_Delay==0):
             # Screamer is 1.
-            pifacedigital.output_pins[1].value = globals.AlarmAudible # This would usually be one when not being tested.
+            #pifacedigital.output_pins[1].value = globals.AlarmAudible # This would usually be one when not being tested. # Usually globals.AlarmAudible but not enough power... 
             log("\n\n\t\tSCREAMER IS ON!!!!!\n\n")
             # Output pin 3 is strobe on the flashing siren.
-            pifacedigital.output_pins[3].value = 1
+            pifacedigital.output_pins[3].value = globals.AlarmAudible
+            pifacedigital.output_pins[4].value = globals.AlarmAudible
             # Output pin 2 is the solid light on the siren.
             pifacedigital.output_pins[2].value = 0
             #print("Alarm is sounding")
             time.sleep(1)
 
-        while (globals.AlarmTempMute == 1 and globals.AlarmCalled == 1 and globals.Alarm_Delay==0):
+        while (globals.AlarmTempMute == 1 or globals.AlarmCalled == 1 and globals.Alarm_Delay==0):
             # Mutes the Alarm if sounding for longer than AlarmTime (Refer to ScreamerControl)
             log("\n\n\t\tSCREAMER IS Muted!!!!!\n\n")
             pifacedigital.output_pins[1].value = 0
             pifacedigital.output_pins[3].value = 0
-            pifacedigital.output_pins[2].value = 1
+            pifacedigital.output_pins[4].value = 0
+            pifacedigital.output_pins[2].value = globals.AlarmAudible
             #print("Alarm is muted")
             time.sleep(1)
 
@@ -375,11 +442,13 @@ def Screamer():
     pifacedigital.output_pins[1].value = 0
     pifacedigital.output_pins[2].value = 0
     pifacedigital.output_pins[3].value = 0
+    pifacedigital.output_pins[4].value = 0
 
 def ScreamerOff():
     pifacedigital.output_pins[1].value = 0
     pifacedigital.output_pins[2].value = 0 # Solid light
     pifacedigital.output_pins[3].value = 0 # Flashing Strobe Effect
+    pifacedigital.output_pins[4].value = 0 # Flashing Strobe Effect
     # Screamer is now off.
     print("Alarm is off now...")
 
@@ -414,31 +483,28 @@ def ScreamerControl():
     count = 0
 
     while (globals.AlarmCalled == 1 and globals.AlarmLoop >= x):
-        while (globals.AlarmTempMute == 0 and globals.AlarmCalled == 1 and globals.AlarmTime > count):
+              
+        print("First WHile Loop Conditions:", globals.AlarmTime, " ", globals.AlarmCalled)
+        
+        while (globals.AlarmCalled == 1 and globals.AlarmTime > count and globals.AlarmClear != 1):
             log("Alarm is Sounding... Sleeping Alarm for, %d seconds." % (globals.AlarmTime-count))
+            print("Second  while Loop of Screamer Contro")
             count += 1
             time.sleep(1)
-
-            if (globals.AlarmTime == count):
-                globals.AlarmTempMute = 1 # Switch to Once
-                count = 0
-
-
-        while (globals.AlarmTempMute == 1 and globals.AlarmTime > count and globals.AlarmCalled == 1):
-            log("Alarm is Muted... Sleeping Alarm for, %d seconds." % (globals.AlarmTime-count))
-            count += 1
-            time.sleep(1)
-
-            if (globals.AlarmTime == count):
-                globals.AlarmTempMute = 0 # Switch to Once
-                count = 0
+            
+            if count == 1: 
+                ScreamerStart()
 
         x += 1
 
         log("ALarm Loops Remaining: %d" % (globals.AlarmLoop-x))
         log("ALarm Called: %d" % (globals.AlarmCalled))
 
-        if ((globals.AlarmLoop-x)==0):
+
+        print("Before end if statement", globals.AlarmLoop-x, " ", globals.AlarmCalled) 
+
+        if ((globals.AlarmLoop-x)==0 or globals.AlarmCalled == 0 or globals.AlarmClear==1):
+            ScreamerStop()
             globals.AlarmCalled = 0
             globals.AlarmTempMute = 0
             globals.run_once=0
@@ -447,17 +513,13 @@ def ScreamerControl():
             log("Alarm control has ended...")
             globals.CurrentTriggers = [0,0,0,0]
             #xxx
-
             break
-
-
 
 
 
 def ActivateAlarm(name):
     # Initiate Class for Screamer...
     # Function is used so it can be cancelled easily.
-    aaAlarm = threading.Thread(target=Screamer)
     aaAlarmControl = threading.Thread(target=ScreamerControl)
 
     returnedStatus = getLastSensorLog(globals.ZoneinAlarm)
@@ -467,18 +529,15 @@ def ActivateAlarm(name):
 
     aaEmailNotification = threading.Thread(target=sendNotification, args=("Urgent - Alarm Notifcation - " + str(returnedStatus[0]),"Zone " + str(zoneinfo[2]) + " is in Alarm","Bryony Crt","Time of Incident: " + str(returnedStatus[0]),"nicholas@suburbanau.com"))
 
-    globals.AlarmCalled = 1
-
     print("At Activate Alarm")
     print(globals.AlarmCalled, " ", globals.run_once, " ", globals.AlarmClear, " ", globals.arrayStatusArmed[globals.ZoneinAlarm])
 
-    while (globals.AlarmCalled==1): # Don't need this anymore sum(globals.arrayStatusArmed) > 0 and ...
+    while (globals.AlarmCalled==1 and globals.run_once == 0): # Don't need this anymore sum(globals.arrayStatusArmed) > 0 and ...
        # Do something...
        print("Waiting at alarm clear")
 
        if globals.run_once == 0 and globals.AlarmClear == 0 and globals.arrayStatusArmed[globals.ZoneinAlarm] == 1:
           log("Starting Alarm Threads - ActivateAlarm (True) - Run_Once")
-          globals.thread_list.append(aaAlarm)
           globals.thread_list.append(ScreamerControl)
           globals.thread_list.append(aaEmailNotification)
           # Check Database for Silence is enabled...
@@ -489,7 +548,6 @@ def ActivateAlarm(name):
           globals.Alarm_Delay=1
           aaAlarmControl.start()
           ## time.sleep(globals.AlarmDelay)
-          aaAlarm.start()
           aaEmailNotification.start()
 
           globals.run_once = 1
@@ -505,6 +563,7 @@ def ActivateAlarm(name):
                globals.run_once = 0
                globals.ZoneinAlarm = 99
                ScreamerOff()
+               ScreamerStop()
                globals.Arming_Delay=0
                globals.Alarming_Delay=0
                globals.AlarmClear=0
@@ -512,6 +571,7 @@ def ActivateAlarm(name):
                ScreamerOff()
                setConfigurationSettings('ZoneinAlarm',globals.ZoneinAlarm)
                log("\n\tAlarm should now be off...")
+               #time.sleep(4)
                # Set Screamer to off.
                break
                #time.sleep(1)

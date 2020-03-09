@@ -19,7 +19,7 @@ listener.register(3, pifacedigitalio.IODIR_RISING_EDGE, pirEventCall3)   #Rising
 listener.register(4, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput4)
 listener.register(5, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput5)
 listener.register(6, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput6)
-listener.register(7, pifacedigitalio.IODIR_RISING_EDGE, RemoteInput7)
+listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
 
 # Beep is a notification to confirm that the system is functioning.
 #beeper(1,1,1)
@@ -27,7 +27,7 @@ listener.register(7, pifacedigitalio.IODIR_RISING_EDGE, RemoteInput7)
 #beeper(1,2,1)
 
 # Updates Global Variables and keeps what's needed in Sync with the Database.
-t = InfiniteTimer(2, UpdateGlobals)
+t = InfiniteTimer(3, UpdateGlobals)
 
 # Download SMTP Server settings from the server - Currently it only calls this once on start-up.
 globals.smtpEmail=getConfigurationSettings('smtpEmail')
@@ -37,14 +37,18 @@ globals.smtpServer=getConfigurationSettings('smtpServer')
 globals.smtpPort=getConfigurationSettings('smtpPort')
 globals.mailRecip=getConfigurationSettings('mailRecip')
 
+listener.activate()
+t.start()
+
 try:
-    listener.activate()
+    
     # Example Usage
-    t.start()
+    
+    print("All Activated")
     #app.run(host='0.0.0.0')
     globals.context=(globals.cer,globals.key)
     app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True) 
-    print("All Activated")
+    
 
 # Close Database and destroy listeners.
 except (KeyboardInterrupt, SystemExit):

@@ -1,6 +1,6 @@
 from flask import Flask
 from OpenSSL import SSL
-from functions import *
+#from functions import *
 
 import os
 context=SSL.Context(SSL.SSLv23_METHOD)
@@ -35,9 +35,9 @@ def zone7():
      
      
 if __name__ == '__main__':
-    #globals.context=(globals.cer,globals.key)
-    #app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True)
+    globals.context=(globals.cer,globals.key)
+    app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True)
     #app.run(host='0.0.0.0',port=5001,ssl_context='adhoc',debug=True) #
-    app.run(host='0.0.0.0') #
+    #app.run(host='0.0.0.0') #
     # // Guide for SSL blog.miguelgrinberg.com/post/running-your-flask-application-over-https
     
