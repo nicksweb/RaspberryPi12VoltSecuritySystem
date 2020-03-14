@@ -15,8 +15,8 @@ from webapi import *
 
 listener.register(0, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall0) # Falling is for a PIR
 listener.register(1, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall1)
-listener.register(2, pifacedigitalio.IODIR_RISING_EDGE, pirEventCall2)
-listener.register(3, pifacedigitalio.IODIR_RISING_EDGE, pirEventCall3)   #Rising is for a Reed Switch
+listener.register(2, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall2)
+listener.register(3, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall3)   #Rising is for a Reed Switch (A Switch basically!)
 listener.register(4, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput4)
 listener.register(5, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput5)
 listener.register(6, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput6)
@@ -29,6 +29,7 @@ listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
 
 # Updates Global Variables and keeps what's needed in Sync with the Database.
 t = InfiniteTimer(3, UpdateGlobals)
+s = InfiniteTimer(1800, cron)
 
 # Download SMTP Server settings from the server - Currently it only calls this once on start-up.
 globals.smtpEmail=getConfigurationSettings('smtpEmail')
@@ -37,17 +38,17 @@ globals.smtpPassword=getConfigurationSettings('smtpPassword')
 globals.smtpServer=getConfigurationSettings('smtpServer')
 globals.smtpPort=getConfigurationSettings('smtpPort')
 globals.mailRecip=getConfigurationSettings('mailRecip')
-
+globals.pushOverUserKey=getConfigurationSettings('pushOverUserKey')
+globals.pushOverAPPToken=getConfigurationSettings('pushOverAPPToken')
 
 try:
-    
     listener.activate()
+    startup()
     t.start()
-    print("All Activated")
+    s.start()
     globals.context=(globals.cer,globals.key)
     app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=False,use_reloader=False) 
     #app.run(host='0.0.0.0')
-    
 
 
 # Close Database and destroy listeners.

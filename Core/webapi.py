@@ -1,5 +1,6 @@
 from flask import Flask
 from OpenSSL import SSL
+from functions import *
 #from functions import *
 
 import os

@@ -1,0 +1,27 @@
+; Created by referring to the following guides:
+;
+; - https://tecadmin.net/setup-autorun-python-script-using-systemd/
+; - https://www.linode.com/docs/quick-answers/linux/start-service-at-boot/
+;
+;
+[Unit]
+Description=PiAlarmSystem Service
+After=multi-user.target
+;Conflights=mariadb.service
+;Restart=on-failure
+
+[Service]
+Type=simple
+StartLimitIntervalSec=0
+; So the service starts. 
+Restart=always
+RestartSec=5
+; User should the be user your PiSS Alarm System is in. 
+User=pi
+; Update the locations to suit. 
+; Note your bin file may be a different location to the below. 
+ExecStart=/usr/bin/python3 /home/pi/Documents/Python/PiAlarmSystem/Core/main.py
+StandardInput=tty-force
+
+[Install]
+WantedBy=multi-user.target
