@@ -7,7 +7,7 @@ import monitor
 
 # Import functions, alerts
 from functions import *
-from alerts import *
+from alerts import * 
 from webapi import *
 
 # Main application begins below.

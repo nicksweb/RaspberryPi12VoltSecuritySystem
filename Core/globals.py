@@ -67,7 +67,7 @@ AlarmTempMute = 0
 AlarmClear=0 # A virtual switch that turns the alarms off
 AlarmDelay=20  # Delaying the time you have to get out before the alarm detects threats - Also the Grace period for switching off the alarm.
 Alarm_Delay=0 # Add on increments for each time the remote is pressed.
-
+ 
 reedSwitches=[9999]
 
 ZoneinAlarm=99  # 99 is used as an initialization value and the fact there's no 99 sensor.
@@ -96,4 +96,5 @@ import os
 context=SSL.Context(SSL.SSLv23_METHOD)
 cer = os.path.join(os.path.dirname(__file__),'piss.crt') 
 key = os.path.join(os.path.dirname(__file__),'piss.key')
+webpathKey='57ah6uasdfFSsGDEAFJgaghfq'
 

@@ -90,15 +90,26 @@ def beeper(w,x,timeChoice): # Number of times to beep
         w = 1 # Set w to 1 so output pin will be high (On)
 
     for i in range(x):
+        if globals.AlarmCalled == 1 and globals.AlarmClear==1 or globals.ZoneinAlarm == 99:
+            globals.Alarm_Delay=0
+            break
+            
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = globals.ServiceMode #w
         pifacedigital.output_pins[2].value = globals.ServiceMode #w
+        
+        if  globals.AlarmCalled == 1 and globals.AlarmClear==1 or globals.ZoneinAlarm == 99:
+            pifacedigital.output_pins[0].value = 0
+            pifacedigital.output_pins[2].value = 0
+            globals.Alarm_Delay=0
+            break
+            
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = 0
         pifacedigital.output_pins[2].value = 0
-
-
-
+        
+        
+            
 def logAlarming(pin, status): # Logs the time an alarm is armed to the Database
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
@@ -229,7 +240,7 @@ def PersonalEmergency(x):
       else:
           ScreamerStop()
           aa = threading.Thread(target=delayArming)
-          #globals.thread_list.append(aa)
+          #globals.thread_list.append(aa)  
           aa.start()
           #print("Alarm is muted")
           globals.AlarmCalled=0
@@ -251,7 +262,8 @@ def RemoteInput5(event):  # C Key on remote.
         globals.keyC = 0       
         
     for i in globals.keyCList:        
-        beeper(globals.keyC,1,globals.keyC)
+        if globals.AlarmCalled == 0 and globals.ZoneinAlarm != 99 and globals.Alarm_Delay==0: 
+            beeper(globals.keyC,1,globals.keyC)            
         RemoteUpdateSingleZone(i, globals.keyC)            
         globals.arrayStatusArmed[i] = globals.keyC            
         logAlarming(i, globals.keyC)
@@ -272,7 +284,8 @@ def RemoteInput6(event): # B Key on remote.
        
         
     for i in globals.keyBList:        
-        beeper(globals.keyB,1,globals.keyB)
+        if globals.AlarmCalled == 0 and globals.ZoneinAlarm != 99 and globals.Alarm_Delay==0: 
+            beeper(globals.keyB,1,globals.keyB)
         RemoteUpdateSingleZone(i, globals.keyB)            
         globals.arrayStatusArmed[i] = globals.keyB            
         logAlarming(i, globals.keyB)
@@ -294,7 +307,10 @@ def RemoteInput7(event): # A Key on remote.
         
     for i in globals.keyAList:        
         globals.arrayStatusArmed[i] = globals.keyA
-        beeper(globals.keyA,1,globals.keyA)
+        
+        if globals.AlarmCalled == 0 and globals.ZoneinAlarm != 99 and globals.Alarm_Delay==0: 
+            beeper(globals.keyA,1,globals.keyA)
+            
         RemoteUpdateSingleZone(i, globals.keyA)            
         logAlarming(i, globals.keyA)
                     
@@ -424,9 +440,9 @@ def ScreamerControl():
 
     log("Screamer Control %d %d %d " % (globals.AlarmDelay, globals.AlarmClear, globals.Alarm_Delay))
 
-    while(globals.AlarmDelay > x and globals.AlarmClear==0 and globals.Alarm_Delay==1 and globals.AlarmCalled == 1): # and globals.arrayStatusArmed[globals.ZoneinAlarm] == 1
+    while((globals.AlarmDelay*10) > x and globals.AlarmClear==0 and globals.Alarm_Delay==1 and globals.AlarmCalled == 1): # and globals.arrayStatusArmed[globals.ZoneinAlarm] == 1
 
-        log("Delaying Alarm:\t%d" % (globals.AlarmDelay-x))
+        log("Delaying Alarm:\t%d" % ((globals.AlarmDelay*10)-x))
 
 
         #Start Beeper in separate thread so it does't slow this thread down.
@@ -436,13 +452,13 @@ def ScreamerControl():
 
         x += 1
 
-        if globals.AlarmDelay == x:
-            x = 0
-            globals.AlarmTempMute = 0
+        if (globals.AlarmDelay*10) == x:
+            x = 0 
             globals.Alarm_Delay = 0
+            globals.AlarmTempMute = 0
             log("Alarm_Delay finshed")
 
-        time.sleep(1)
+        time.sleep(0.1)
 
     x = 0
     w = 0
