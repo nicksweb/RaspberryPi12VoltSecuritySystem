@@ -78,6 +78,19 @@ def timerBeeper(timerDecimal):
         }
         return switcher.get(timerDecimal,"Invalid result fetches")
 
+def AlarmDelayBeeper():
+    globals.AlarmDelayBeeper = 1
+    
+    while globals.AlarmDelayBeeper==1:
+        
+        time.sleep(1)
+        pifacedigital.output_pins[0].value = globals.ServiceMode #w
+        pifacedigital.output_pins[2].value = globals.ServiceMode #w
+        
+        time.sleep(1)
+        pifacedigital.output_pins[0].value = 0 #w
+        pifacedigital.output_pins[2].value = 0 #w
+
 def beeper(w,x,timeChoice): # Number of times to beep
     # Do something
     timeVal = float(timerBeeper(timeChoice))
@@ -89,26 +102,31 @@ def beeper(w,x,timeChoice): # Number of times to beep
         # Short beeps remain the same at 0.2 (As per timerBeeper function above).
         w = 1 # Set w to 1 so output pin will be high (On)
 
+    print("Before the 4 loop")
+
     for i in range(x):
-        if globals.AlarmCalled == 1 and globals.AlarmClear==1 or globals.ZoneinAlarm == 99:
-            globals.Alarm_Delay=0
-            break
-            
+        
+        #print("Zone in Alarm - ", globals.ZoneinAlarm, "AlarmClear", globals.AlarmClear, " globals.StatusArmed - ", globals.arrayStatusArmed[globals.ZoneinAlarm])
+        #if globals.ZoneinAlarm != 99:
+        #    if  globals.AlarmClear==1 or globals.arrayStatusArmed[globals.ZoneinAlarm] == 0:
+        #        pifacedigital.output_pins[0].value = 0
+        #        pifacedigital.output_pins[2].value = 0
+        #        return
+                                
+        #time.sleep(timeVal)
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = globals.ServiceMode #w
         pifacedigital.output_pins[2].value = globals.ServiceMode #w
         
-        if  globals.AlarmCalled == 1 and globals.AlarmClear==1 or globals.ZoneinAlarm == 99:
-            pifacedigital.output_pins[0].value = 0
-            pifacedigital.output_pins[2].value = 0
-            globals.Alarm_Delay=0
-            break
+        #if globals.ZoneinAlarm != 99:
+        #    if  globals.AlarmClear==1 or globals.arrayStatusArmed[globals.ZoneinAlarm] == 0:
+        #        pifacedigital.output_pins[0].value = 0
+        #        pifacedigital.output_pins[2].value = 0
+        #        return
             
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = 0
         pifacedigital.output_pins[2].value = 0
-        
-        
             
 def logAlarming(pin, status): # Logs the time an alarm is armed to the Database
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
@@ -259,10 +277,11 @@ def RemoteInput5(event):  # C Key on remote.
     globals.keyC = DatabasePullStatus(globals.keyC)
        
     if max(globals.arrayStatusArmed) > 0:
-        globals.keyC = 0       
+        globals.keyC = 0    
+        globals.AlarmDelayBeeper = 0    
         
     for i in globals.keyCList:        
-        if globals.AlarmCalled == 0 and globals.ZoneinAlarm != 99 and globals.Alarm_Delay==0: 
+        if globals.AlarmDelayBeeper == 0: 
             beeper(globals.keyC,1,globals.keyC)            
         RemoteUpdateSingleZone(i, globals.keyC)            
         globals.arrayStatusArmed[i] = globals.keyC            
@@ -280,11 +299,12 @@ def RemoteInput6(event): # B Key on remote.
     globals.keyB = DatabasePullStatus(globals.keyB)
     
     if max(globals.arrayStatusArmed) > 0:
-        globals.keyB = 0    
+        globals.keyB = 0  
+        globals.AlarmDelayBeeper = 0   
        
         
     for i in globals.keyBList:        
-        if globals.AlarmCalled == 0 and globals.ZoneinAlarm != 99 and globals.Alarm_Delay==0: 
+        if globals.AlarmDelayBeeper == 0: 
             beeper(globals.keyB,1,globals.keyB)
         RemoteUpdateSingleZone(i, globals.keyB)            
         globals.arrayStatusArmed[i] = globals.keyB            
@@ -304,11 +324,15 @@ def RemoteInput7(event): # A Key on remote.
     
     if max(globals.arrayStatusArmed) > 0:
         globals.keyA = 0
+        globals.AlarmDelayBeeper = 0       
+    
+    
+    #time.sleep(10)    
         
     for i in globals.keyAList:        
         globals.arrayStatusArmed[i] = globals.keyA
         
-        if globals.AlarmCalled == 0 and globals.ZoneinAlarm != 99 and globals.Alarm_Delay==0: 
+        if globals.AlarmDelayBeeper == 0: 
             beeper(globals.keyA,1,globals.keyA)
             
         RemoteUpdateSingleZone(i, globals.keyA)            
@@ -367,9 +391,9 @@ def ScreamerStart():
     pifacedigital.output_pins[4].value = globals.AlarmAudible
     log("\n\n\t\tSCREAMER IS ON!!!!!\n\n")
     # Output pin 3 is strobe on the flashing siren.
-    pifacedigital.output_pins[3].value = globals.ServiceMode
+    pifacedigital.output_pins[3].value = 1
     # Output pin 2 is the solid light on the siren.
-    pifacedigital.output_pins[2].value = globals.ServiceMode
+    pifacedigital.output_pins[2].value = 1
     #print("Alarm is sounding")
     time.sleep(1)
             
@@ -447,15 +471,16 @@ def ScreamerControl():
 
         #Start Beeper in separate thread so it does't slow this thread down.
         if (x == 0): # Only start the thread once.
-            ad = threading.Thread(target=beeper, args=(1,globals.AlarmDelay-1,0))
+            ad = threading.Thread(target=AlarmDelayBeeper)
             ad.start()
 
         x += 1
 
-        if (globals.AlarmDelay*10) == x:
+        if (globals.AlarmDelay*10) == x or globals.Alarm_Delay==0:
             x = 0 
             globals.Alarm_Delay = 0
             globals.AlarmTempMute = 0
+            globals.AlarmDelayBeeper = 0
             log("Alarm_Delay finshed")
 
         time.sleep(0.1)

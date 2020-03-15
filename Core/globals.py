@@ -60,6 +60,7 @@ MinAlarmTriggers = 4 # Set a threshold before alarm will sound
 CurrentTriggers = [0,0,0,0] # Always starts at 0 and resets to 0 when system is not armed.
 #Status_Armed = 0 # Changes to 1 if an Alarm is armed. MAY need to change this to an array - To reduce Database Calls.
 arrayStatusArmed = [0,0,0,0]
+AlarmDelayBeeper = 0
 AlarmAudible = 0 # Intial Value for Screamer is 1 (Can be set from Database and variable is overridden)
 AlarmLoop = 20 # How many times should the alarm loop before switching off - 10 Times is 1 Hour approx.
 AlarmCalled = 0 # Default to 0 as it ensures alarm loop isn't recalled (Calling an endless number of threads).
@@ -89,7 +90,7 @@ loggingEnabled=1
 # Global Threads
 thread_list = [] # Used for Threading.
 
-ServiceMode = 1 # Use 0 for on and 1 for off. (As it's setting values as needed - Please note you will need to set AlarmAudible to 0 as well. 
+ServiceMode = 0 # Use 0 for on and 1 for off. (As it's setting values as needed - Please note you will need to set AlarmAudible to 0 as well. 
 
 
 import os
