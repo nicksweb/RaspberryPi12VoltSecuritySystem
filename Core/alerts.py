@@ -14,12 +14,10 @@ from sendmail import MailSender
 PUSHOVER_TOKEN = { 'token' : globals.pushOverAPPToken[0]}
 PUSHOVER_USER = { 'user' : globals.pushOverUserKey[0]}
 
-
-
 #Pushover.__init__globals.pushOverAPPToken[0])
 #Client(globals.pushOverUserKey[0]).send_message("PiSS has Started", title="PiSS is Running")
 
-def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageDetail, mailTo):
+def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageDetail, mailTo, customTitle, customMessage):
 
     GETLASTLog=functions.getLastSensorLog(globals.ZoneinAlarm)
     zoneinfo = functions.PISSZoneStatus(globals.ZoneinAlarm)
@@ -59,7 +57,26 @@ def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageD
             msg.set("retry","60")
             msg.set("sound","siren")
             msg.set("expire","3600")
-          
+        if Messagetype == 5:
+            msg.set("title", globals.pushsmtpTitle[5])
+            msg.set("message", globals.pushsmtpMessages[5])
+        if Messagetype == 6:
+            msg.set("title", globals.pushsmtpTitle[6])
+            msg.set("message", globals.pushsmtpMessages[6])
+        if Messagetype == 7:
+            msg.set("title", globals.pushsmtpTitle[7])
+            msg.set("message", globals.pushsmtpMessages[7])
+        if Messagetype == 8: # Custom message... 
+            msg.set("title", customTitle)
+            msg.set("message", customMessage)
+        if Messagetype == 9: # Custom message... 
+            msg.set("title", customTitle)
+            msg.set("message", customMessage)
+            msg.set("priority","1")
+            msg.set("retry","60")
+            msg.set("sound","siren")
+            msg.set("expire","3600")
+
         msg.set("url",globals.pushURL)
 
         po.send(msg)

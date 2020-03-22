@@ -141,6 +141,16 @@ def logAlarming(pin, status): # Logs the time an alarm is armed to the Database
     zoneinfo = PISSZoneStatus(pin)
     log(str('\nZone Set:\t%s\n' % (zoneinfo[2])))
 
+    if zoneinfo[3] ==  1:
+        aaEmailNotification = threading.Thread(target=sendNotification, 
+        args=(8,'','','','','','','Zone %s is Armed' % zoneinfo[2],'Zone %s is Armed' % zoneinfo[2]))
+        aaEmailNotification.start() 
+    
+    if zoneinfo[3] ==  0:
+        aaEmailNotification = threading.Thread(target=sendNotification, 
+        args=(8,'','','','','','','Zone %s is Disarmed' % zoneinfo[2],'Zone %s is Disarmed' % zoneinfo[2]))
+        aaEmailNotification.start() 
+
 def pirSensorLog(pin, status):
     
     if(globals.arrayStatusArmed[pin]==1 and globals.Arming_Delay==0):
@@ -252,7 +262,7 @@ def PersonalEmergency(x):
           ScreamerStart()                             
           globals.AlarmCalled=1
           aaEmailNotification = threading.Thread(target=sendNotification, 
-          args=(3,'','','','','',''))
+          args=(3,'','','','','','','',''))
           aaEmailNotification.start()
           
       else:
@@ -263,7 +273,7 @@ def PersonalEmergency(x):
           #print("Alarm is muted")
           globals.AlarmCalled=0
           aaEmailNotification = threading.Thread(target=sendNotification, 
-          args=(4,'','','','','',''))
+          args=(4,'','','','','','','',''))
           aaEmailNotification.start()
 
 def RemoteInput5(event):  # C Key on remote.
@@ -278,7 +288,7 @@ def RemoteInput5(event):  # C Key on remote.
        
     if max(globals.arrayStatusArmed) > 0:
         globals.keyC = 0    
-        globals.AlarmDelayBeeper = 0    
+        globals.AlarmDelayBeeper = 0   
         
     for i in globals.keyCList:        
         if globals.AlarmDelayBeeper == 0: 
@@ -298,10 +308,11 @@ def RemoteInput6(event): # B Key on remote.
     
     globals.keyB = DatabasePullStatus(globals.keyB)
     
+    print("Zone Key Status B - %s" % globals.keyB)
+
     if max(globals.arrayStatusArmed) > 0:
         globals.keyB = 0  
-        globals.AlarmDelayBeeper = 0   
-       
+        globals.AlarmDelayBeeper = 0        
         
     for i in globals.keyBList:        
         if globals.AlarmDelayBeeper == 0: 
@@ -324,8 +335,7 @@ def RemoteInput7(event): # A Key on remote.
     
     if max(globals.arrayStatusArmed) > 0:
         globals.keyA = 0
-        globals.AlarmDelayBeeper = 0       
-    
+        globals.AlarmDelayBeeper = 0 
     
     #time.sleep(10)    
         
@@ -349,36 +359,41 @@ def initZones(): # Ran at program start-up to set all zones to off.
 
 # This zone checks if alarm should be activated and subsequently sounded.
 def checkZone(zone):
+    
+    zoneinfo = PISSZoneStatus(zone)
 
-   zoneinfo = PISSZoneStatus(zone)
+    if globals.arrayStatusArmed[zone] == 1 and globals.alarm_delay == 0: #or globals.arrayStatusArmed[9999] == 0:
+        globals.CurrentTriggers[zone] += 1
+        title = 'Triggered: %s Zone' % zoneinfo[2]
+        message = 'Zone has been Triggered %s a total of %d times' % (zoneinfo[2],globals.CurrentTriggers[zone])
+        aaEmailNotification = threading.Thread(target=sendNotification,args=(9,'','','','','','',title,message))
+        aaEmailNotification.start()
+         
 
-   if globals.arrayStatusArmed[zone] == 1 and globals.alarm_delay == 0: #or globals.arrayStatusArmed[9999] == 0:
-      globals.CurrentTriggers[zone] += 1
+    if zone in globals.reedSwitches:
+        globals.CurrentTriggers[zone] = globals.MinAlarmTriggers+2 # So it trips the alarm instantly - It's a Reed Switch.
 
-      if zone in globals.reedSwitches:
-          globals.CurrentTriggers[zone] = globals.MinAlarmTriggers+2 # So it trips the alarm instantly - It's a Reed Switch.
+    print("Current Trigers 1:",globals.CurrentTriggers[zone])
 
-      print("Current Trigers 1:",globals.CurrentTriggers[zone])
+    log(str('\n%s Zone has triggered a checkZone()\n' % (zoneinfo[2])))
 
-      log(str('\n%s Zone has triggered a checkZone()\n' % (zoneinfo[2])))
+    # Could use global.ClearAlarm as a variable to switch a triggered alarm off and set CurrentTriggers to 0 (Restarting the detection process).
+    if globals.arrayStatusArmed[zone] == 0 and globals.AlarmCalled == 0 and globals.run_once == 0:
+       globals.CurrentTriggers[zone] = 0
 
-   # Could use global.ClearAlarm as a variable to switch a triggered alarm off and set CurrentTriggers to 0 (Restarting the detection process).
-   if globals.arrayStatusArmed[zone] == 0 and globals.AlarmCalled == 0 and globals.run_once == 0:
-      globals.CurrentTriggers[zone] = 0
-
-   if globals.CurrentTriggers[zone] >= globals.MinAlarmTriggers and globals.AlarmCalled == 0 and globals.Arming_Delay == 0:
-      globals.AlarmCalled=1
-      globals.ZoneinAlarm=zone
+    if globals.CurrentTriggers[zone] >= globals.MinAlarmTriggers and globals.AlarmCalled == 0 and globals.Arming_Delay == 0:
+       globals.AlarmCalled=1
+       globals.ZoneinAlarm=zone
       
-      log(str('\n%s Zone has triggered %s activation of the Zone\'s sensor' % (str(zoneinfo[2]),str(globals.CurrentTriggers[zone]))))
-      log('\n\tAlarm Thread Starting.\n')
-      aa = threading.Thread(target=ActivateAlarm, args=(zone,))
+       log(str('\n%s Zone has triggered %s activation of the Zone\'s sensor' % (str(zoneinfo[2]),str(globals.CurrentTriggers[zone]))))
+       log('\n\tAlarm Thread Starting.\n')
+       aa = threading.Thread(target=ActivateAlarm, args=(zone,))
 
-      globals.CurrentTriggers[zone] = 0
+       globals.CurrentTriggers[zone] = 0
       
 
-      globals.thread_list.append(aa)
-      aa.start()
+       globals.thread_list.append(aa)
+       aa.start()
 
       # initZones()  Use only for testing - Used to set Database values back to 0 for Alarm's Activation Status - If using in producti on - Once alarm is activated
       #             It will not reactivate after it's first activation.
@@ -535,7 +550,7 @@ def ActivateAlarm(name):
     "Zone " + str(zoneinfo[2]) + " is in Alarm",
     "Bryony Crt",
     "Time of Incident: " + str(returnedStatus[0]),
-    "nicholas@suburbanau.com"))
+    "nicholas@suburbanau.com",'',''))
 
     print("At Activate Alarm")
     print(globals.AlarmCalled, " ", globals.run_once, " ", globals.AlarmClear, " ", globals.arrayStatusArmed[globals.ZoneinAlarm])
@@ -591,7 +606,7 @@ def ActivateAlarm(name):
                "Zone " + str(zoneinfo[2]) + " is in Alarm",
                "Street Crt",
                "Time of Incident: " + str(returnedStatus[0]),
-               "nicholas@suburbanau.com"))
+               "nicholas@suburbanau.com",'',''))
                aaEmailNotification.start()
                #time.sleep(4)
                # Set Screamer to off.
@@ -671,8 +686,12 @@ def cron():
     
 def startup():
     aaEmailNotification = threading.Thread(target=sendNotification, 
-    args=(2,'','','','','',''))
+    args=(2,'','','','','','','',''))
     aaEmailNotification.start()
+
+def triggerReset():
+    globals.CurrentTriggers = [0,0,0,0]
+    print ("Reset Triggers", globals.CurrentTriggers)
 
 def getConfigurationSettings(key): #Only ran once at program start-up and then every 30 minutes.
     sql = "select Value from piSS_Settings Where SettingKey = '%s';" % (key)

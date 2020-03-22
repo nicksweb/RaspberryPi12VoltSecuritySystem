@@ -10,6 +10,8 @@ dbUser='pmatest'
 dbPassword='dummypassword'
 dbHost='127.0.0.1'
 dbDatabase='piSecuritySystem'
+
+
 ###
 ##
 #
@@ -37,8 +39,22 @@ pushOverUserKey='USERKEY'
 pushOverAPPToken='APPTOKEN'
 
 # Message details. 
-pushsmtpTitle=("%s Message","%s is in Alarm - %s","%s has started","%s - PERSONAL EMERGENCY","%s - PERSONAL EMERGENCY")
-pushsmtpMessages=("Alarm has <b>Stopped</b> - System is running.","<b>Zone %s</b> is in <b>ALARM</b>!","%s is running...","A <b>PERSONAL EMERGENCY</b> has been <b>Activated</b>","A <b>PERSONAL EMERGENCY</b> has been <b>Deactivated</b>")
+pushsmtpTitle=("%s Message",
+"%s is in Alarm - %s","%s has started",
+"%s - PERSONAL EMERGENCY",
+"%s - PERSONAL EMERGENCY",
+"Zone ACTIVATED",
+"Zone DEACTIVATED",
+"Zone Triggered"
+)
+pushsmtpMessages=("Alarm has <b>Stopped</b> - System is running.",
+"<b>Zone %s</b> is in <b>ALARM</b>!",
+"%s is running...",
+"A <b>PERSONAL EMERGENCY</b> has been <b>Activated</b>",
+"A <b>PERSONAL EMERGENCY</b> has been <b>Deactivated</b>",
+"Zone Activated",
+"Zone Deactivated",
+"Zone Triggered")
 pushURL="https://172.16.0.22"
 
 # Globals for Key Fobs 

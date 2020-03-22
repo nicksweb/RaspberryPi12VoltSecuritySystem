@@ -30,6 +30,7 @@ listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
 # Updates Global Variables and keeps what's needed in Sync with the Database.
 t = InfiniteTimer(3, UpdateGlobals)
 s = InfiniteTimer(1800, cron)
+r = InfiniteTimer(180, triggerReset)
 
 # Download SMTP Server settings from the server - Currently it only calls this once on start-up.
 globals.smtpEmail=getConfigurationSettings('smtpEmail')
@@ -46,6 +47,7 @@ try:
     startup()
     t.start()
     s.start()
+    r.start()
     globals.context=(globals.cer,globals.key)
     app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=False,use_reloader=False) 
     #app.run(host='0.0.0.0')
