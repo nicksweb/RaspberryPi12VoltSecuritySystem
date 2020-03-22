@@ -34,7 +34,6 @@ smtpServer="smtp.gmail.com"
 smtpPort=465
 mailRecip=('emailrecip@test.com','emailrecip2@test.com')
 # Set the Type such as TLS / SSL in sendmail.py
-
 pushOverUserKey='USERKEY'
 pushOverAPPToken='APPTOKEN'
 
@@ -81,6 +80,7 @@ AlarmAudible = 0 # Intial Value for Screamer is 1 (Can be set from Database and 
 AlarmLoop = 20 # How many times should the alarm loop before switching off - 10 Times is 1 Hour approx.
 AlarmCalled = 0 # Default to 0 as it ensures alarm loop isn't recalled (Calling an endless number of threads).
 AlarmTempMute = 0
+AlarmTime = 10
 AlarmClear=0 # A virtual switch that turns the alarms off
 AlarmDelay=20  # Delaying the time you have to get out before the alarm detects threats - Also the Grace period for switching off the alarm.
 Alarm_Delay=0 # Add on increments for each time the remote is pressed.

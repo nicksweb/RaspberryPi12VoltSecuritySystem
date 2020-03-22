@@ -28,17 +28,11 @@ listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
 #beeper(1,2,1)
 
 # Updates Global Variables and keeps what's needed in Sync with the Database.
-t = InfiniteTimer(3, UpdateGlobals)
-s = InfiniteTimer(1800, cron)
+t = InfiniteTimer(2, UpdateGlobals)
+s = InfiniteTimer(30, cron)
 r = InfiniteTimer(180, triggerReset)
 
 # Download SMTP Server settings from the server - Currently it only calls this once on start-up.
-globals.smtpEmail=getConfigurationSettings('smtpEmail')
-globals.smtpUser=getConfigurationSettings('smtpUser')
-globals.smtpPassword=getConfigurationSettings('smtpPassword')
-globals.smtpServer=getConfigurationSettings('smtpServer')
-globals.smtpPort=getConfigurationSettings('smtpPort')
-globals.mailRecip=getConfigurationSettings('mailRecip')
 globals.pushOverUserKey=getConfigurationSettings('pushOverUserKey')
 globals.pushOverAPPToken=getConfigurationSettings('pushOverAPPToken')
 

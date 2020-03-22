@@ -11,11 +11,11 @@ from pushover import Pushover
 # From Github (https://github.com/dimaba/sendmail)
 from sendmail import MailSender
 
-PUSHOVER_TOKEN = { 'token' : globals.pushOverAPPToken[0]}
-PUSHOVER_USER = { 'user' : globals.pushOverUserKey[0]}
+PUSHOVER_TOKEN = { 'token' : globals.pushOverAPPToken}
+PUSHOVER_USER = { 'user' : globals.pushOverUserKey}
 
-#Pushover.__init__globals.pushOverAPPToken[0])
-#Client(globals.pushOverUserKey[0]).send_message("PiSS has Started", title="PiSS is Running")
+#Pushover.__init__globals.pushOverAPPToken)
+#Client(globals.pushOverUserKey).send_message("PiSS has Started", title="PiSS is Running")
 
 def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageDetail, mailTo, customTitle, customMessage):
 
@@ -24,15 +24,15 @@ def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageD
 
     if (globals.ENABLE_PUSH==1):
         po = Pushover(globals.pushOverAPPToken[0])
-        po.user(globals.pushOverUserKey[0])   
+        po.user(globals.pushOverUserKey[0])  
 
         msg=po.msg("PiSS")
         
         msg.set("html",1)
         
         if Messagetype == 0:  
-            msg.set("title", globals.pushsmtpTitle[0] % globals.SYSTEM_NAME)
-            msg.set("message", globals.pushsmtpMessages[0])
+            msg.set("title", globals.pushsmtpTitle % globals.SYSTEM_NAME)
+            msg.set("message", globals.pushsmtpMessages)
         if Messagetype == 1:
             msg.set("title", globals.pushsmtpTitle[1] % (globals.SYSTEM_NAME,zoneinfo[2]))
             msg.set("message", globals.pushsmtpMessages[1] % zoneinfo[2])
@@ -82,7 +82,7 @@ def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageD
         po.send(msg)
         
     if (globals.ENABLE_EMAIL==1):
-        ourmailsender = MailSender(globals.smtpUser[0], globals.smtpPassword[0], (globals.smtpServer[0], globals.smtpPort[0]))
+        ourmailsender = MailSender(globals.smtpUser, globals.smtpPassword, (globals.smtpServer, globals.smtpPort))
         
         if Messagetype == 0:  
             #Do NOthing
@@ -92,7 +92,7 @@ def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageD
             subject = globals.pushsmtpTitle[1] % (globals.SYSTEM_NAME,zoneinfo[2])
             messageDetail = globals.pushsmtpMessages[1] % zoneinfo[2]
             plaintext = "Alarm Notification - Zone: " +  zoneinfo[2] + " , \n" \
-                "Time of Event - \n" + str(GETLASTLog[0]) + " \n" \
+                "Time of Event - \n" + str(GETLASTLog) + " \n" \
                 "" + messageDetail + "\n" + \
                 " Status=" + str(GETLASTLog[1]) + \
                 "\n" + subject + ""  

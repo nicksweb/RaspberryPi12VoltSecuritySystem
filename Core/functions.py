@@ -22,8 +22,6 @@ from alerts import *
 pifacedigital = pifacedigitalio.PiFaceDigital()
 listener = pifacedigitalio.InputEventListener(chip=pifacedigital)
 
-
-
 #
 # PiFaceDigitalIO Functions
 #
@@ -564,14 +562,10 @@ def ActivateAlarm(name):
           log("Starting Alarm Threads - ActivateAlarm (True) - Run_Once")
           globals.thread_list.append(ScreamerControl)
           globals.thread_list.append(aaEmailNotification)
-          # Check Database for Silence is enabled...
-          returnedStatus = PISSZoneStatus(10001)
-          databaseValue11x = returnedStatus[3]
-          globals.AlarmAudible=databaseValue11x
+          #globals.AlarmAudible=getConfigurationSettingsValue(10001)
 
           globals.Alarm_Delay=1
           aaAlarmControl.start()
-          ## time.sleep(globals.AlarmDelay)
           aaEmailNotification.start()
 
           globals.run_once = 1
@@ -593,7 +587,7 @@ def ActivateAlarm(name):
                globals.ZoneinAlarm = 99
                
                ScreamerOff()
-               RemoteUpdateSingleZone(10003, 0) # Update AlarmClear in DB.
+               setConfigurationSettingsInt(10003, 0) # Update AlarmClear in DB.
                globals.Arming_Delay=0
                globals.Alarming_Delay=0
                globals.AlarmClear=0
@@ -619,6 +613,8 @@ def ActivateAlarm(name):
         # Set of Screamer... for 5 mins...
 
 def UpdateGlobals():
+    start = time.time()
+
     # UpdateGlobals Class goes here... Function...
     returnedStatus = PISSZoneStatus(0)
     databaseValue0 = returnedStatus[3]
@@ -636,53 +632,43 @@ def UpdateGlobals():
     databaseValue3 = returnedStatus[3]
     globals.arrayStatusArmed[3]=databaseValue3
 
-    returnedStatus = PISSZoneStatus(9999)
-    databaseValue9x = returnedStatus[3]
+    #returnedStatus = PISSZoneStatus(9999)    For Tamper currently not implemented as 4 is being used for a sensor. 
+    #databaseValue9x = returnedStatus[3]
     #globals.arrayStatusArmed[3]=databaseValue9x
 
-    returnedStatus = PISSZoneStatus(10000)
-    databaseValue10x = returnedStatus[3]
-    globals.MinAlarmTriggers=databaseValue10x
+    globals.AlarmClear=getConfigurationSettingsValue(10003)
 
-    returnedStatus = PISSZoneStatus(10001)
-    databaseValue11x = returnedStatus[3]
-    globals.AlarmAudible=databaseValue11x
-
-    returnedStatus = PISSZoneStatus(10002)
-    databaseValue12x = returnedStatus[3]
-    globals.AlarmTime=databaseValue12x
-
-    returnedStatus = PISSZoneStatus(10003)
-    databaseValue13x = returnedStatus[3]
-    globals.AlarmClear=databaseValue13x
-
-    returnedStatus = PISSZoneStatus(10004)
-    databaseValue14x = returnedStatus[3]
-    globals.AlarmDelay=databaseValue14x
-
-    returnedStatus = PISSZoneStatus(10005)
-    databaseValue15x = returnedStatus[3]
-    globals.AlarmLoop=databaseValue15x
-
-    returnedStatus = PISSZoneStatus(10006)
-    databaseValue16x = returnedStatus[3]
-    globals.ArmingDelay=databaseValue16x
-    
-    
-    
-    #aaEmailNotification = threading.Thread(target=sendNotification, args=("Urgent - Alarm Notifcation - Lounge-Dining Zone - is in Alarm","Bryony Crt","nosullivan92@gmail.com","Message Deatil... 1234. .. ","nicholas@suburbanau.com"))
-    
-    #log("Globals Updated")
-    
+    end = time.time()
+    print("Time taken for UpdateGlobals:", end-start)
+        
 def cron():
-    globals.smtpEmail=getConfigurationSettings('smtpEmail')
-    globals.smtpUser=getConfigurationSettings('smtpUser')
-    globals.smtpPassword=getConfigurationSettings('smtpPassword')
-    globals.smtpServer=getConfigurationSettings('smtpServer')
-    globals.smtpPort=getConfigurationSettings('smtpPort')
-    globals.mailRecip=getConfigurationSettings('mailRecip')
+    start = time.time()
+
+    globals.smtpEmail=getConfigurationSettingsValue('smtpEmail')
+    globals.smtpUser=getConfigurationSettingsValue('smtpUser')
+    globals.smtpPassword=getConfigurationSettingsValue('smtpPassword')
+    globals.smtpServer=getConfigurationSettingsValue('smtpServer')
+    globals.smtpPort=getConfigurationSettingsValue('smtpPort')
+    globals.mailRecip=getConfigurationSettingsValue('mailRecip')
     globals.pushOverUserKey=getConfigurationSettings('pushOverUserKey')
     globals.pushOverAPPToken=getConfigurationSettings('pushOverAPPToken')
+
+    # Alarm Settings (Not critical)
+    globals.MinAlarmTriggers=getConfigurationSettingsValue(10000)
+    globals.AlarmAudible=getConfigurationSettingsValue(10001)
+    globals.AlarmTime=getConfigurationSettingsValue(10002)
+    globals.AlarmDelay=getConfigurationSettingsValue(10004)
+    globals.AlarmLoop=getConfigurationSettingsValue(10005)
+    globals.ArmingDelay=getConfigurationSettingsValue(10006)
+    
+    # Global Settings for System
+    globals.SYSTEM_NAME=getConfigurationSettingsValue("SYSTEM_NAME")
+    globals.ENABLE_EMAIL=getConfigurationSettingsValue("ENABLE_EMAIL")
+    globals.ENABLE_PUSH=getConfigurationSettingsValue("ENABLE_PUSH")
+    globals.ServiceMode=getConfigurationSettingsValue("ServiceMode")
+
+    end = time.time()
+    print("Time taken for Cron:", end-start, "Service MOde - ", globals.ServiceMode)
     
 def startup():
     aaEmailNotification = threading.Thread(target=sendNotification, 
@@ -702,10 +688,28 @@ def getConfigurationSettings(key): #Only ran once at program start-up and then e
     cnx.close()
     return result
 
+def getConfigurationSettingsValue(key): #Only ran once at program start-up and then every 30 minutes.
+    sql = "select Value from piSS_Settings Where SettingKey = '%s';" % (key)
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
+    mycursor = cnx.cursor()
+    mycursor.execute(sql)
+    result = mycursor.fetchone()
+    cnx.close()
+    return result[0]
+
 def setConfigurationSettings(key,value):
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     sql = "Update piSS_Settings Set Value=%s Where SettingKey=%s;"
+    val = (value, key)
+    mycursor.execute(sql, val)
+    cnx.commit()
+    cnx.close()
+
+def setConfigurationSettingsInt(key,value):
+    cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
+    mycursor = cnx.cursor()
+    sql = "Update piSS_Settings Set Value=%d Where SettingKey=%d;"
     val = (value, key)
     mycursor.execute(sql, val)
     cnx.commit()
