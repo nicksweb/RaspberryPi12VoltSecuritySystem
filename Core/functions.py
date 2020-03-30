@@ -689,7 +689,7 @@ def getConfigurationSettings(key): #Only ran once at program start-up and then e
     return result
 
 def getConfigurationSettingsValue(key): #Only ran once at program start-up and then every 30 minutes.
-    sql = "select Value from piSS_Settings Where SettingKey = '%s';" % (key)
+    sql = "select Value from piSS_Settings Where SettingKey like '%s';" % (key)
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
     mycursor.execute(sql)
@@ -709,9 +709,9 @@ def setConfigurationSettings(key,value):
 def setConfigurationSettingsInt(key,value):
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
-    sql = "Update piSS_Settings Set Value=%d Where SettingKey=%d;"
-    val = (value, key)
-    mycursor.execute(sql, val)
+    sql = "Update piSS_Settings Set Value=%d Where SettingKey=%d;" % (value, key)
+    #val = (value, key)
+    mycursor.execute(sql)#, val)
     cnx.commit()
     cnx.close()
 
