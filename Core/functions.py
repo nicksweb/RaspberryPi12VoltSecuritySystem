@@ -587,20 +587,16 @@ def ActivateAlarm(name):
                globals.ZoneinAlarm = 99
                
                ScreamerOff()
-               setConfigurationSettingsInt(10003, 0) # Update AlarmClear in DB.
+               setConfigurationSettingsInt(10003,0) # Update AlarmClear in DB.
                globals.Arming_Delay=0
                globals.Alarming_Delay=0
                globals.AlarmClear=0
                ScreamerOff()
-               setConfigurationSettings('ZoneinAlarm',globals.ZoneinAlarm)
+               setConfigurationSettings('ZoneinAlarm',99)
                log("\n\tAlarm should now be off...")
                
                aaEmailNotification = threading.Thread(target=sendNotification, 
-               args=(0,globals.ZoneinAlarm,"Urgent - Alarm Notifcation - " + str(returnedStatus[0]),
-               "Zone " + str(zoneinfo[2]) + " is in Alarm",
-               "Street Crt",
-               "Time of Incident: " + str(returnedStatus[0]),
-               "nicholas@suburbanau.com",'',''))
+               args=(0,'','','','','','','',''))
                aaEmailNotification.start()
                #time.sleep(4)
                # Set Screamer to off.
@@ -709,7 +705,7 @@ def setConfigurationSettings(key,value):
 def setConfigurationSettingsInt(key,value):
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
     mycursor = cnx.cursor()
-    sql = "Update piSS_Settings Set Value=%d Where SettingKey=%d;" % (value, key)
+    sql = "Update piSS_Settings Set Value=%d Where SettingKey like %d;" % (int(value), int(key))
     #val = (value, key)
     mycursor.execute(sql)#, val)
     cnx.commit()

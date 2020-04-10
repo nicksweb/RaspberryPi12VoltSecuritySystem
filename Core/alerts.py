@@ -31,8 +31,8 @@ def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageD
         msg.set("html",1)
         
         if Messagetype == 0:  
-            msg.set("title", globals.pushsmtpTitle % globals.SYSTEM_NAME)
-            msg.set("message", globals.pushsmtpMessages)
+            msg.set("title", globals.pushsmtpTitle[0] % globals.SYSTEM_NAME)
+            msg.set("message", globals.pushsmtpMessages[0])
         if Messagetype == 1:
             msg.set("title", globals.pushsmtpTitle[1] % (globals.SYSTEM_NAME,zoneinfo[2]))
             msg.set("message", globals.pushsmtpMessages[1] % zoneinfo[2])

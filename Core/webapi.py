@@ -16,53 +16,40 @@ def hello():
      
 @app.route('/'+ globals.webpathKey +'/RemoteInput4')
 def zone4():
-    
-    if request.args.get('mode') == 'true':
-        RemoteInput7("run")
-        return "Zone4"
-    else:
-        return "Zone4-Off" 
+        RemoteInput4("run")
+        return "RemoteInput4"
 
 @app.route('/'+ globals.webpathKey +'/RemoteInput5')
 def zone5():
-    
-    if request.args.get('mode') == 'true':
-        RemoteInput7("run")
-        return "Zone5"
-    else:
-        return "Zone5-Off" 
+        RemoteInput5("run")
+        return "RemoteInput5"
 
 @app.route('/'+ globals.webpathKey +'/RemoteInput6')
 def zone6():
-    
-    if request.args.get('mode') == 'true':
-        RemoteInput7("run")
-        return "Zone6"
-    else:
-        return "Zone6-Off" 
+        RemoteInput6("run")
+        return "RemoteInput6"
     
 @app.route('/'+ globals.webpathKey +'/RemoteInput7')
 def zone7():
-    
-    if request.args.get('mode') == 'true':
         RemoteInput7("run")
-        return "Zone7"
-    else:
-        return "Zone7-Off" 
+        return "RemoteInput7"
 
-@app.route('/'+ globals.webpathKey +'/RemoteInput7x')
+@app.route('/'+ globals.webpathKey +'/ZoneControl')
 def zone7x():
-    
-    if request.args.get('mode') == 'true':
-        RemoteInput7("run")
-        return "Zone7"
+    if request.args.get('mode') == 'true': 
+        zone = request.args['zone']
+        RemoteUpdateSingleZone(int(zone),1)
+        return zone
     else:
-        return "Zone7-Off"   
+        zone = request.args['zone']
+        RemoteUpdateSingleZone(int(zone),0)
+        return zone
+
      
 if __name__ == '__main__':
     globals.context=(globals.cer,globals.key)
-    app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True)
+    #app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True)
     #app.run(host='0.0.0.0',port=5001,ssl_context='adhoc',debug=True) #
-    #app.run(host='0.0.0.0') #
+    #app.run(host='0.0.0.0',debug=True) 
     # // Guide for SSL blog.miguelgrinberg.com/post/running-your-flask-application-over-https
     

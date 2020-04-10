@@ -43,7 +43,8 @@ try:
     s.start()
     r.start()
     globals.context=(globals.cer,globals.key)
-    app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=False,use_reloader=False) 
+    app.run(host='0.0.0.0',port=5001,debug=False,use_reloader=False) 
+    #app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=False,use_reloader=False) 
     #app.run(host='0.0.0.0')
 
 

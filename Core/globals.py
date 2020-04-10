@@ -39,7 +39,8 @@ pushOverAPPToken='APPTOKEN'
 
 # Message details. 
 pushsmtpTitle=("%s Message",
-"%s is in Alarm - %s","%s has started",
+"%s is in Alarm - %s",
+"%s has started",
 "%s - PERSONAL EMERGENCY",
 "%s - PERSONAL EMERGENCY",
 "Zone ACTIVATED",
@@ -113,5 +114,7 @@ import os
 context=SSL.Context(SSL.SSLv23_METHOD)
 cer = os.path.join(os.path.dirname(__file__),'piss.crt') 
 key = os.path.join(os.path.dirname(__file__),'piss.key')
-webpathKey='57ah6uasdfFSsGDEAFJgaghfq'
+
+webpathKey='1cfd6847b4be4a8cbb93a8488e8ffa21'
+#webpathKey='57ah6uasdfFSsGDEAFJgaghfq'
 
