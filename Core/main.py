@@ -29,12 +29,13 @@ listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
 
 # Updates Global Variables and keeps what's needed in Sync with the Database.
 t = InfiniteTimer(2, UpdateGlobals)
-s = InfiniteTimer(30, cron)
+s = InfiniteTimer(45, cron)
 r = InfiniteTimer(180, triggerReset)
 
 # Download SMTP Server settings from the server - Currently it only calls this once on start-up.
 globals.pushOverUserKey=getConfigurationSettings('pushOverUserKey')
 globals.pushOverAPPToken=getConfigurationSettings('pushOverAPPToken')
+globals.webpathKey=getConfigurationSettingsValue('apiToken')
 
 try:
     listener.activate()

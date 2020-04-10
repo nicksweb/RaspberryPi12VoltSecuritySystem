@@ -11,7 +11,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-     return "PiSSWeb"     
+     return globals.webpathKey
+     #return "PiSSWeb"
      beeper(1,2,1)
      
 @app.route('/'+ globals.webpathKey +'/RemoteInput4')
@@ -33,6 +34,11 @@ def zone6():
 def zone7():
         RemoteInput7("run")
         return "RemoteInput7"
+
+@app.route('/'+ globals.webpathKey +'/AlarmClear')
+def alarmClr():
+        globals.AlarmClear=1
+        return "AlarmClear=1"
 
 @app.route('/'+ globals.webpathKey +'/ZoneControl')
 def zone7x():

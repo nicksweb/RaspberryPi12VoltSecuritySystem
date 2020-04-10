@@ -379,7 +379,7 @@ def checkZone(zone):
     if globals.arrayStatusArmed[zone] == 0 and globals.AlarmCalled == 0 and globals.run_once == 0:
        globals.CurrentTriggers[zone] = 0
 
-    if globals.CurrentTriggers[zone] >= globals.MinAlarmTriggers and globals.AlarmCalled == 0 and globals.Arming_Delay == 0:
+    if sum(globals.CurrentTriggers) >= globals.MinAlarmTriggers and globals.AlarmCalled == 0 and globals.Arming_Delay == 0:
        globals.AlarmCalled=1
        globals.ZoneinAlarm=zone
       
@@ -497,6 +497,11 @@ def ScreamerControl():
             log("Alarm_Delay finshed")
 
         time.sleep(0.1)
+
+    globals.Alarm_Delay = 0
+    globals.AlarmTempMute = 0
+    globals.AlarmDelayBeeper = 0
+    log("Alarm_Delay finshed")
 
     x = 0
     w = 0
@@ -632,7 +637,8 @@ def UpdateGlobals():
     #databaseValue9x = returnedStatus[3]
     #globals.arrayStatusArmed[3]=databaseValue9x
 
-    globals.AlarmClear=getConfigurationSettingsValue(10003)
+    if (globals.Alarm_Delay==1 or globals.AlarmCalled == 1):
+        globals.AlarmClear=getConfigurationSettingsValue(10003)
 
     end = time.time()
     print("Time taken for UpdateGlobals:", end-start)
@@ -663,10 +669,15 @@ def cron():
     globals.ENABLE_PUSH=getConfigurationSettingsValue("ENABLE_PUSH")
     globals.ServiceMode=getConfigurationSettingsValue("ServiceMode")
 
+    globals.pushURL=getConfigurationSettingsValue("pushURL")
+    globals.webpathKey=getConfigurationSettingsValue("apiToken")
+
     end = time.time()
     print("Time taken for Cron:", end-start, "Service MOde - ", globals.ServiceMode)
     
 def startup():
+    # Run Cron to get App Settings
+    cron()    
     aaEmailNotification = threading.Thread(target=sendNotification, 
     args=(2,'','','','','','','',''))
     aaEmailNotification.start()
