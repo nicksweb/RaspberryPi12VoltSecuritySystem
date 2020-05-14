@@ -169,25 +169,25 @@ def pirSensorLog(pin, status):
 def pirEventCall0(event):
     pin = 0
     status = pifacedigital.input_pins[pin].value
-    pirSensorLog(pin, status)
+    #pirSensorLog(pin, status)
     if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin) 
 
 def pirEventCall1(event):
     pin = 1
     status = pifacedigital.input_pins[pin].value
-    pirSensorLog(pin, status)
+    #pirSensorLog(pin, status)
     if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin)
 
 def pirEventCall2(event):
     pin = 2
     status = pifacedigital.input_pins[pin].value
-    pirSensorLog(pin, status)
+    #pirSensorLog(pin, status)
     if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin)
 
 def pirEventCall3(event):
     pin = 3
     status = pifacedigital.input_pins[pin].value
-    pirSensorLog(pin, status)
+    #pirSensorLog(pin, status)
     if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin)
 
 def remoteSensorLog(pin, status):
@@ -366,6 +366,7 @@ def checkZone(zone):
         message = 'Zone has been Triggered %s a total of %d times' % (zoneinfo[2],globals.CurrentTriggers[zone])
         aaEmailNotification = threading.Thread(target=sendNotification,args=(9,'','','','','','',title,message))
         aaEmailNotification.start()
+        pirSensorLog(zone, 1)
          
 
     if zone in globals.reedSwitches:
