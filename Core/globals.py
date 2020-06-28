@@ -60,9 +60,8 @@ pushURL="https://172.16.0.22/admin"
 
 # Globals for Key Fobs 
 keyAList = [0,1,2,3]
-# keyB is automatically used as the off key for A zones. 
-keyBList = [0,1] # Selected zones only. 
-keyCList = [2,3] # Selected zones only.  
+keyBList = [4] # Selected zones only. 
+keyCList = [0,1,2,3,4] # Selected zones only.  # Key C is disconnected for extra Aloarm Zone (Pin 4) 
 
 keyA=0
 keyB=0
@@ -74,9 +73,10 @@ keyC=0
 # AlarmSet
 # Set how many times alarm will take a positive reading before Setting off the AlarmSet
 MinAlarmTriggers = 4 # Set a threshold before alarm will sound
-CurrentTriggers = [0,0,0,0] # Always starts at 0 and resets to 0 when system is not armed.
+CurrentTriggers = [0,0,0,0,0] # Always starts at 0 and resets to 0 when system is not armed.
 #Status_Armed = 0 # Changes to 1 if an Alarm is armed. MAY need to change this to an array - To reduce Database Calls.
-arrayStatusArmed = [0,0,0,0]
+      #RemoteInput [7,6,5,4]
+arrayStatusArmed = [0,0,0,0,0]
 AlarmDelayBeeper = 0
 AlarmAudible = 0 # Intial Value for Screamer is 1 (Can be set from Database and variable is overridden)
 AlarmLoop = 20 # How many times should the alarm loop before switching off - 10 Times is 1 Hour approx.

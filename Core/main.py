@@ -17,10 +17,12 @@ listener.register(0, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall0) # Fallin
 listener.register(1, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall1)
 listener.register(2, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall2)
 listener.register(3, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall3)   #Rising is for a Reed Switch (A Switch basically!)
-listener.register(4, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput4)
-listener.register(5, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput5)
-listener.register(6, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput6)
-listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7)
+# Will now be a PIR for monitoring purposes... 
+#listener.register(5, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput4)   #Disconnecting Key C for extra PIR 
+listener.register(4, pifacedigitalio.IODIR_FALLING_EDGE, pirEventCall4)
+listener.register(5, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput4) # Key D 
+listener.register(6, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput6) # Key B 
+listener.register(7, pifacedigitalio.IODIR_FALLING_EDGE, RemoteInput7) # Key A
 
 # Beep is a notification to confirm that the system is functioning.
 #beeper(1,1,1)

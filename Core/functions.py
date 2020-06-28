@@ -189,6 +189,12 @@ def pirEventCall3(event):
     status = pifacedigital.input_pins[pin].value
     #pirSensorLog(pin, status)
     if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin)
+    
+def pirEventCall4(event):
+    pin = 4
+    status = pifacedigital.input_pins[pin].value
+    #pirSensorLog(pin, status)
+    if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin)    
 
 def remoteSensorLog(pin, status):
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
@@ -284,7 +290,9 @@ def RemoteInput5(event):  # C Key on remote.
     
     globals.keyC = DatabasePullStatus(globals.keyC)
        
-    if max(globals.arrayStatusArmed) > 0:
+    selected_elements = [globals.arrayStatusArmed[index] for index in globals.keyCList]   
+       
+    if max(selected_elements) > 0:
         globals.keyC = 0    
         globals.AlarmDelayBeeper = 0   
         
@@ -308,9 +316,15 @@ def RemoteInput6(event): # B Key on remote.
     
     print("Zone Key Status B - %s" % globals.keyB)
 
-    if max(globals.arrayStatusArmed) > 0:
-        globals.keyB = 0  
-        globals.AlarmDelayBeeper = 0        
+    selected_elements = [globals.arrayStatusArmed[index] for index in globals.keyBList]
+   
+    if max(selected_elements) > 0:
+        globals.keyB = 0
+        globals.AlarmDelayBeeper = 0 
+
+    #if max(globals.arrayStatusArmed) > 0:
+    #    globals.keyB = 0  
+    #    globals.AlarmDelayBeeper = 0        
         
     for i in globals.keyBList:        
         if globals.AlarmDelayBeeper == 0: 
@@ -328,10 +342,11 @@ def RemoteInput7(event): # A Key on remote.
     #globals.thread_list.append(aa)
     aa.start()
     
-    
     globals.keyA = DatabasePullStatus(globals.keyA)
     
-    if max(globals.arrayStatusArmed) > 0:
+    selected_elements = [ globals.arrayStatusArmed[index] for index in globals.keyAList ]
+        
+    if max(selected_elements) > 0:
         globals.keyA = 0
         globals.AlarmDelayBeeper = 0 
     
@@ -346,13 +361,12 @@ def RemoteInput7(event): # A Key on remote.
         RemoteUpdateSingleZone(i, globals.keyA)            
         logAlarming(i, globals.keyA)
                     
-    
-
 def initZones(): # Ran at program start-up to set all zones to off.
   RemoteUpdateSingleZone(0, 0)
   RemoteUpdateSingleZone(1, 0)
   RemoteUpdateSingleZone(2, 0)
   RemoteUpdateSingleZone(3, 0)
+  RemoteUpdateSingleZone(5, 0)
   RemoteUpdateSingleZone(9999, 0)
 
 # This zone checks if alarm should be activated and subsequently sounded.
@@ -633,6 +647,10 @@ def UpdateGlobals():
     returnedStatus = PISSZoneStatus(3)
     databaseValue3 = returnedStatus[3]
     globals.arrayStatusArmed[3]=databaseValue3
+    
+    returnedStatus = PISSZoneStatus(4)
+    databaseValue5 = returnedStatus[3]
+    globals.arrayStatusArmed[4]=databaseValue5
 
     #returnedStatus = PISSZoneStatus(9999)    For Tamper currently not implemented as 4 is being used for a sensor. 
     #databaseValue9x = returnedStatus[3]
@@ -684,7 +702,7 @@ def startup():
     aaEmailNotification.start()
 
 def triggerReset():
-    globals.CurrentTriggers = [0,0,0,0]
+    globals.CurrentTriggers = [0,0,0,0,0]
     print ("Reset Triggers", globals.CurrentTriggers)
 
 def getConfigurationSettings(key): #Only ran once at program start-up and then every 30 minutes.
