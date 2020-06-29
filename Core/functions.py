@@ -114,7 +114,7 @@ def beeper(w,x,timeChoice): # Number of times to beep
         #time.sleep(timeVal)
         time.sleep(timeVal)
         pifacedigital.output_pins[0].value = globals.ServiceMode #w
-        pifacedigital.output_pins[2].value = globals.ServiceMode #w
+        pifacedigital.output_pins[2].value = 1 #w
         
         #if globals.ZoneinAlarm != 99:
         #    if  globals.AlarmClear==1 or globals.arrayStatusArmed[globals.ZoneinAlarm] == 0:
@@ -448,10 +448,10 @@ def Screamer():
             pifacedigital.output_pins[1].value = globals.AlarmAudible # This would usually be one when not being tested. # Usually globals.AlarmAudible but not enough power... 
             log("\n\n\t\tSCREAMER IS ON!!!!!\n\n")
             # Output pin 3 is strobe on the flashing siren.
-            pifacedigital.output_pins[3].value = globals.ServiceMode
+            pifacedigital.output_pins[3].value = 1
             pifacedigital.output_pins[4].value = globals.AlarmAudible
             # Output pin 2 is the solid light on the siren.
-            pifacedigital.output_pins[2].value = globals.ServiceMode
+            pifacedigital.output_pins[2].value = 0
             #print("Alarm is sounding")
             time.sleep(0.1)
 
@@ -461,7 +461,7 @@ def Screamer():
             pifacedigital.output_pins[1].value = 0
             pifacedigital.output_pins[3].value = 0
             pifacedigital.output_pins[4].value = 0
-            pifacedigital.output_pins[2].value = globals.AlarmAudible
+            pifacedigital.output_pins[2].value = 1
             #print("Alarm is muted")
             time.sleep(0.1)
 
@@ -547,7 +547,7 @@ def ScreamerControl():
             #globals.AlarmCalled = 0
             x = x + globals.AlarmLoop
             log("Alarm control has ended...")
-            globals.CurrentTriggers = [0,0,0,0]
+            globals.CurrentTriggers = [0,0,0,0,0]
             #xxx
             break
 
@@ -600,7 +600,7 @@ def ActivateAlarm(name):
                ScreamerStop()
                #InfTimerScreamer.cancel()
                
-               globals.CurrentTriggers = [0,0,0,0]
+               globals.CurrentTriggers = [0,0,0,0,0]
                globals.AlarmTempMute = 0
                globals.AlarmCalled=0
                globals.run_once = 0
