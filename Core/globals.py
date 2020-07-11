@@ -45,8 +45,9 @@ pushsmtpTitle=("%s Message",
 "%s - PERSONAL EMERGENCY",
 "Zone ACTIVATED",
 "Zone DEACTIVATED",
-"Zone Triggered"
-)
+"Zone Triggered",
+"%s is in Delay - %s")
+
 pushsmtpMessages=("Alarm has <b>Stopped</b> - System is running.",
 "<b>Zone %s</b> is in <b>ALARM</b>!",
 "%s is running...",
@@ -54,7 +55,8 @@ pushsmtpMessages=("Alarm has <b>Stopped</b> - System is running.",
 "A <b>PERSONAL EMERGENCY</b> has been <b>Deactivated</b>",
 "Zone Activated",
 "Zone Deactivated",
-"Zone Triggered")
+"Zone Triggered",
+"<b>Zone %s</b> is in <b>DELAY ALARM</b>!")
 
 pushURL="https://172.16.0.22/admin"
 

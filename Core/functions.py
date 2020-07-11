@@ -81,11 +81,11 @@ def AlarmDelayBeeper():
     
     while globals.AlarmDelayBeeper==1:
         
-        time.sleep(1)
+        time.sleep(0.2)
         pifacedigital.output_pins[0].value = globals.ServiceMode #w
         pifacedigital.output_pins[2].value = globals.ServiceMode #w
         
-        time.sleep(1)
+        time.sleep(0.2)
         pifacedigital.output_pins[0].value = 0 #w
         pifacedigital.output_pins[2].value = 0 #w
 
@@ -511,6 +511,19 @@ def ScreamerControl():
             globals.AlarmDelayBeeper = 0
             log("Alarm_Delay finshed")
 
+            returnedStatus = getLastSensorLog(globals.ZoneinAlarm)
+            zoneinfo = PISSZoneStatus(globals.ZoneinAlarm)
+
+            aaEmailNotification = threading.Thread(target=sendNotification, 
+            args=(1,globals.ZoneinAlarm,"Urgent - Alarm Notifcation - " + str(returnedStatus[0]),
+            "Zone " + str(zoneinfo[2]) + " is in Alarm",
+            "Bryony Crt",
+            "Time of Incident: " + str(returnedStatus[0]),
+            globals.smtpEmail,'',''))
+            globals.thread_list.append(aaEmailNotification)
+
+            aaEmailNotification.start()
+
         time.sleep(0.1)
 
     globals.Alarm_Delay = 0
@@ -564,11 +577,11 @@ def ActivateAlarm(name):
     setConfigurationSettings('ZoneinAlarm',globals.ZoneinAlarm)
 
     aaEmailNotification = threading.Thread(target=sendNotification, 
-    args=(1,globals.ZoneinAlarm,"Urgent - Alarm Notifcation - " + str(returnedStatus[0]),
-    "Zone " + str(zoneinfo[2]) + " is in Alarm",
+    args=(10,globals.ZoneinAlarm,"Urgent - Delay Notifcation - " + str(returnedStatus[0]),
+    "Zone " + str(zoneinfo[2]) + " is in Delay",
     "Bryony Crt",
     "Time of Incident: " + str(returnedStatus[0]),
-    "nicholas@suburbanau.com",'',''))
+    globals.smtpEmail,'',''))
 
     print("At Activate Alarm")
     print(globals.AlarmCalled, " ", globals.run_once, " ", globals.AlarmClear, " ", globals.arrayStatusArmed[globals.ZoneinAlarm])
@@ -692,7 +705,7 @@ def cron():
     globals.webpathKey=getConfigurationSettingsValue("apiToken")
 
     end = time.time()
-    print("Time taken for Cron:", end-start, "Service MOde - ", globals.ServiceMode)
+    print("Time taken for Cron:", end-start, "Service Mode - ", globals.ServiceMode)
     
 def startup():
     # Run Cron to get App Settings

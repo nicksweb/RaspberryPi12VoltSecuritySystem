@@ -76,6 +76,14 @@ def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageD
             msg.set("retry","60")
             msg.set("sound","siren")
             msg.set("expire","3600")
+        if Messagetype == 10:
+            msg.set("title", globals.pushsmtpTitle[8] % (globals.SYSTEM_NAME,zoneinfo[2]))
+            msg.set("message", globals.pushsmtpMessages[8] % zoneinfo[2])
+            msg.set("priority","1")
+            msg.set("retry","60")
+            msg.set("sound","siren")
+            msg.set("expire","3600")
+
 
         msg.set("url",globals.pushURL)
 
