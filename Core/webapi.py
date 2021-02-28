@@ -11,9 +11,10 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-     return globals.webpathKey
+     print("Service has started")
+     #return globals.webpathKey
      #return "PiSSWeb"
-     beeper(1,2,1)
+     #beeper(1,2,1)
      
 @app.route('/'+ globals.webpathKey +'/RemoteInput4')
 def zone4():
@@ -40,6 +41,14 @@ def alarmClr():
         globals.AlarmClear=1
         return "AlarmClear=1"
 
+@app.route('/'+ globals.webpathKey +'/WifiSensor')
+def wifiUpdate():
+    if request.args.get('mode') == 'true': 
+        zone = request.args['zone']
+        position = request.args['arrayPos']
+        wifiSensor(int(zone),int(position))
+        return zone
+
 @app.route('/'+ globals.webpathKey +'/ZoneControl')
 def zone7x():
     if request.args.get('mode') == 'true': 
@@ -51,7 +60,7 @@ def zone7x():
         RemoteUpdateSingleZone(int(zone),0)
         return zone
 
-     
+
 if __name__ == '__main__':
     globals.context=(globals.cer,globals.key)
     #app.run(host='0.0.0.0',port=5001,ssl_context=globals.context,debug=True)

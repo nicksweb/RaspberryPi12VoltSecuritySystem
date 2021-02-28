@@ -10,6 +10,8 @@ import mysql.connector
 import threading
 import datetime 
 
+import requests
+
 from decimal import *
 from threading import Timer
 
@@ -88,6 +90,10 @@ def AlarmDelayBeeper():
         time.sleep(0.2)
         pifacedigital.output_pins[0].value = 0 #w
         pifacedigital.output_pins[2].value = 0 #w
+        
+        if globals.AlarmDelayBeeper==0:
+            pifacedigital.output_pins[0].value = 0 #w
+            pifacedigital.output_pins[2].value = 0 #w            
 
 def beeper(w,x,timeChoice): # Number of times to beep
     # Do something
@@ -151,15 +157,26 @@ def logAlarming(pin, status): # Logs the time an alarm is armed to the Database
 
 def pirSensorLog(pin, status):
     
-    if(globals.arrayStatusArmed[pin]==1 and globals.Arming_Delay==0):
-        cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
-        mycursor = cnx.cursor()
-        sql = "INSERT INTO piSS_SensorLog (Port, Status) VALUES (%s, %s)"
-        val = (str(pin), str(status))
-        mycursor.execute(sql, val)
-        cnx.commit()
-        log("Logging Motion Event")
-        cnx.close()
+    if pin <= 40:
+        if(globals.arrayStatusArmed[pin]==1 and globals.Arming_Delay==0):
+            cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
+            mycursor = cnx.cursor()
+            sql = "INSERT INTO piSS_SensorLog (Port, Status) VALUES (%s, %s)"
+            val = (str(pin), str(status))
+            mycursor.execute(sql, val)
+            cnx.commit()
+            log("Logging Motion Event")
+            cnx.close()
+    
+    if pin >= 40:
+            cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
+            mycursor = cnx.cursor()
+            sql = "INSERT INTO piSS_SensorLog (Port, Status) VALUES (%s, %s)"
+            val = (str(pin), str(status))
+            mycursor.execute(sql, val)
+            cnx.commit()
+            log("Logging Motion Event")
+            cnx.close()
 
     #returnedStatus = getLastSensorLog(globals.ZoneinAlarm)
     zoneinfo = PISSZoneStatus(pin)
@@ -194,7 +211,10 @@ def pirEventCall4(event):
     pin = 4
     status = pifacedigital.input_pins[pin].value
     #pirSensorLog(pin, status)
-    if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin)    
+    if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(pin)   
+
+def wifiSensor(zoneID,arrayPos):
+    if globals.AlarmCalled==0 and globals.Arming_Delay==0: checkZone(zoneID,arrayPos)  
 
 def remoteSensorLog(pin, status):
     cnx = mysql.connector.connect(user=globals.dbUser,password=globals.dbPassword,host=globals.dbHost,database=globals.dbDatabase)
@@ -279,6 +299,18 @@ def PersonalEmergency(x):
           aaEmailNotification = threading.Thread(target=sendNotification, 
           args=(4,'','','','','','','',''))
           aaEmailNotification.start()
+          
+def IFTTTNotification(x=0): 
+    
+    globals.AlarmCalled=0
+    globals.Arming_Delay=0
+    
+    if (globals.runIFTTTOnce==0):
+        aa = threading.Thread(target=sendIFTTT)
+        #globals.CurrentTriggers[zone] = 0     
+        #globals.thread_list.append(aa)
+        aa.start()
+        globals.runIFTTTOnce=1
 
 def RemoteInput5(event):  # C Key on remote.
     # Using for loop to loop through the C key zones.
@@ -294,7 +326,7 @@ def RemoteInput5(event):  # C Key on remote.
        
     if max(selected_elements) > 0:
         globals.keyC = 0    
-        globals.AlarmDelayBeeper = 0   
+        globals.AlarmDelayBeeper = 0  
         
     for i in globals.keyCList:        
         if globals.AlarmDelayBeeper == 0: 
@@ -370,43 +402,90 @@ def initZones(): # Ran at program start-up to set all zones to off.
   RemoteUpdateSingleZone(9999, 0)
 
 # This zone checks if alarm should be activated and subsequently sounded.
-def checkZone(zone):
+def checkZone(zone,wifiDetail=0):
     
     zoneinfo = PISSZoneStatus(zone)
+    
+    print ("In CheckZone:", globals.arrayStatusArmed[zone], "   Alarm Delay", globals.alarm_delay)
 
-    if globals.arrayStatusArmed[zone] == 1 and globals.alarm_delay == 0: #or globals.arrayStatusArmed[9999] == 0:
+
+    print(zoneinfo)
+
+    if wifiDetail==0 and globals.arrayStatusArmed[zone] == 1 and globals.alarm_delay == 0: #or globals.arrayStatusArmed[9999] == 0:
         globals.CurrentTriggers[zone] += 1
         title = 'Triggered: %s Zone' % zoneinfo[2]
         message = 'Zone has been Triggered %s a total of %d times' % (zoneinfo[2],globals.CurrentTriggers[zone])
         aaEmailNotification = threading.Thread(target=sendNotification,args=(9,'','','','','','',title,message))
         aaEmailNotification.start()
         pirSensorLog(zone, 1)
-         
+
+    if wifiDetail>=1 and globals.arrayStatusArmed[wifiDetail] == 1 and globals.alarm_delay == 0 and globals.runIFTTTOnce==0: #or globals.arrayStatusArmed[9999] == 0:
+        globals.CurrentTriggers[wifiDetail] += 1
+        title = 'Triggered: %s Zone' % zoneinfo[2]
+        message = 'Zone has been Triggered %s a total of %d times' % (zoneinfo[2],globals.CurrentTriggers[wifiDetail])
+        aaEmailNotification = threading.Thread(target=sendNotification,args=(9,'','','','','','',title,message))
+        aaEmailNotification.start()
+        aaIFTTTNotification = threading.Thread(target=IFTTTNotification)
+        globals.thread_list.append(aaIFTTTNotification)
+        aaIFTTTNotification.start()
+        pirSensorLog(zone, 1)        
 
     if zone in globals.reedSwitches:
-        globals.CurrentTriggers[zone] = globals.MinAlarmTriggers+2 # So it trips the alarm instantly - It's a Reed Switch.
+        globals.CurrentTriggers[wifiDetail] = globals.MinAlarmTriggers+2 # So it trips the alarm instantly - It's a Reed Switch.       
 
-    print("Current Trigers 1:",globals.CurrentTriggers[zone])
+    if wifiDetail==0:
+        print("Current Trigers:",globals.CurrentTriggers[zone])
+    
+    if wifiDetail>=1:
+        print("Current Trigers:",globals.CurrentTriggers[wifiDetail])
 
     log(str('\n%s Zone has triggered a checkZone()\n' % (zoneinfo[2])))
 
+    #zone=wifiDetail
+
     # Could use global.ClearAlarm as a variable to switch a triggered alarm off and set CurrentTriggers to 0 (Restarting the detection process).
-    if globals.arrayStatusArmed[zone] == 0 and globals.AlarmCalled == 0 and globals.run_once == 0:
+    if wifiDetail==0 and globals.arrayStatusArmed[zone] == 0 and globals.AlarmCalled == 0 and globals.run_once == 0:
        globals.CurrentTriggers[zone] = 0
 
-    if sum(globals.CurrentTriggers) >= globals.MinAlarmTriggers and globals.AlarmCalled == 0 and globals.Arming_Delay == 0:
+    #if wifiDetail>0 and globals.arrayStatusArmed[wifiDetail] == 0 and globals.AlarmCalled == 0 and globals.run_once == 0:
+    #   globals.CurrentTriggers[wifiDetail] = 0
+
+    if wifiDetail==0 and sum(globals.CurrentTriggers) >= globals.MinAlarmTriggers and globals.AlarmCalled == 0 and globals.Arming_Delay == 0:
        globals.AlarmCalled=1
-       globals.ZoneinAlarm=zone
-      
-       log(str('\n%s Zone has triggered %s activation of the Zone\'s sensor' % (str(zoneinfo[2]),str(globals.CurrentTriggers[zone]))))
-       log('\n\tAlarm Thread Starting.\n')
-       aa = threading.Thread(target=ActivateAlarm, args=(zone,))
 
-       globals.CurrentTriggers[zone] = 0
-      
+       #if wifiDetail>=1 and globals.runIFTTTOnce==0:
+        #   globals.runIFTTTOnce=1
+        #   globals.ZoneinAlarm=wifiDetail
+        #   log(str('\n%s Zone has triggered %s activation of the Zone\'s sensor' % (str(zoneinfo[2]),str(globals.CurrentTriggers[wifiDetail]))))
+        #   log('\n\tSending Notifcation with Notifcation Thread for a Wifi Action.\n')
+           ### run
+           #globals.CurrentTriggers = [0]*globals.AlarmsinUse
+           #globals.AlarmTempMute = 0
+           #globals.AlarmCalled=0
+           #globals.run_once = 0
+           #globals.ZoneinAlarm = 99
+           #globals.AlarmClear = 0
+           
+           #aa = threading.Thread(target=ActivateAlarm, args=(zone,))
+           #globals.CurrentTriggers[zone] = 0     
+           #globals.thread_list.append(aa)
+           #aa.start()
+           
+           #globals.AlarmCalled=0
+           #globals.Arming_Delay=0
+           #globals.AlarmClear=1
+           
+       if wifiDetail==0:
+           globals.ZoneinAlarm=zone
 
-       globals.thread_list.append(aa)
-       aa.start()
+           log(str('\n%s Zone has triggered %s activation of the Zone\'s sensor' % (str(zoneinfo[2]),str(globals.CurrentTriggers[zone]))))
+           log('\n\tAlarm Thread Starting.\n')
+           aa = threading.Thread(target=ActivateAlarm, args=(zone,))
+           globals.CurrentTriggers[zone] = 0     
+           globals.thread_list.append(aa)
+           aa.start()
+      
+       
 
       # initZones()  Use only for testing - Used to set Database values back to 0 for Alarm's Activation Status - If using in producti on - Once alarm is activated
       #             It will not reactivate after it's first activation.
@@ -470,6 +549,7 @@ def Screamer():
         log("ALarm Called: %d" % (globals.Alarm_Delay))
 
     # Set Screamer to off just in case.
+    pifacedigital.output_pins[0].value = 0
     pifacedigital.output_pins[1].value = 0
     pifacedigital.output_pins[2].value = 0
     pifacedigital.output_pins[3].value = 0
@@ -560,7 +640,7 @@ def ScreamerControl():
             #globals.AlarmCalled = 0
             x = x + globals.AlarmLoop
             log("Alarm control has ended...")
-            globals.CurrentTriggers = [0,0,0,0,0]
+            globals.CurrentTriggers = [0]*globals.AlarmsinUse
             #xxx
             break
 
@@ -613,7 +693,7 @@ def ActivateAlarm(name):
                ScreamerStop()
                #InfTimerScreamer.cancel()
                
-               globals.CurrentTriggers = [0,0,0,0,0]
+               globals.CurrentTriggers = [0]*globals.AlarmsinUse
                globals.AlarmTempMute = 0
                globals.AlarmCalled=0
                globals.run_once = 0
@@ -665,6 +745,14 @@ def UpdateGlobals():
     databaseValue5 = returnedStatus[3]
     globals.arrayStatusArmed[4]=databaseValue5
 
+    returnedStatus = PISSZoneStatus(5)
+    databaseValue5 = returnedStatus[3]
+    globals.arrayStatusArmed[5]=databaseValue5
+    
+    returnedStatus = PISSZoneStatus(6)
+    databaseValue5 = returnedStatus[3]
+    globals.arrayStatusArmed[6]=databaseValue5
+
     #returnedStatus = PISSZoneStatus(9999)    For Tamper currently not implemented as 4 is being used for a sensor. 
     #databaseValue9x = returnedStatus[3]
     #globals.arrayStatusArmed[3]=databaseValue9x
@@ -686,6 +774,8 @@ def cron():
     globals.mailRecip=getConfigurationSettingsValue('mailRecip')
     globals.pushOverUserKey=getConfigurationSettings('pushOverUserKey')
     globals.pushOverAPPToken=getConfigurationSettings('pushOverAPPToken')
+    globals.IFTTTAction=getConfigurationSettings('IFTTTAction')
+    globals.EnableIFTTT=getConfigurationSettings('Enable_IFTTT')
 
     # Alarm Settings (Not critical)
     globals.MinAlarmTriggers=getConfigurationSettingsValue(10000)
@@ -703,6 +793,8 @@ def cron():
 
     globals.pushURL=getConfigurationSettingsValue("pushURL")
     globals.webpathKey=getConfigurationSettingsValue("apiToken")
+    
+    globals.runIFTTTOnce=0
 
     end = time.time()
     print("Time taken for Cron:", end-start, "Service Mode - ", globals.ServiceMode)
@@ -715,7 +807,7 @@ def startup():
     aaEmailNotification.start()
 
 def triggerReset():
-    globals.CurrentTriggers = [0,0,0,0,0]
+    globals.CurrentTriggers = [0]*globals.AlarmsinUse
     print ("Reset Triggers", globals.CurrentTriggers)
 
 def getConfigurationSettings(key): #Only ran once at program start-up and then every 30 minutes.
@@ -816,3 +908,6 @@ class InfiniteTimer():
             self.thread.cancel()
         else:
             print("Timer never started or failed to initialize.")
+            
+
+

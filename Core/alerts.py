@@ -3,6 +3,7 @@ import globals
 import http.client
 #import urllib
 import functions
+import requests
 
 #import pushover
 #from pushover import init, Client
@@ -16,6 +17,10 @@ PUSHOVER_USER = { 'user' : globals.pushOverUserKey}
 
 #Pushover.__init__globals.pushOverAPPToken)
 #Client(globals.pushOverUserKey).send_message("PiSS has Started", title="PiSS is Running")
+
+def sendIFTTT():
+    print(globals.IFTTTAction[0])
+    receive = requests.get(globals.IFTTTAction[0])
 
 def sendNotification(Messagetype, zonenumber, title, subject, mailFrom, messageDetail, mailTo, customTitle, customMessage):
 
