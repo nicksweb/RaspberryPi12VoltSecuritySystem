@@ -122,6 +122,6 @@ context=SSL.Context(SSL.SSLv23_METHOD)
 cer = os.path.join(os.path.dirname(__file__),'piss.crt') 
 key = os.path.join(os.path.dirname(__file__),'piss.key')
 
-webpathKey='1cfd6847b4be4a8cbb93a8488e8ffa21bbb'
+webpathKey='1cfd6847b4be4a8cbb93a8488e8ffa21aaa'
 EnableIFTTT=1
 runIFTTTOnce=0
